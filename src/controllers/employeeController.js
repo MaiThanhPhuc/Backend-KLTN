@@ -1,7 +1,6 @@
 const { Employee } = require("../models/employee")
 const { Department } = require("../models/otherModels")
 
-
 const employeeController = {
   addEmployee: async (req, res) => {
     try {

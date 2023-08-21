@@ -4,7 +4,7 @@ const mongoose = require('mongoose')
 const morgan = require('morgan')
 const dotenv = require('dotenv')
 var bodyParser = require('body-parser')
-
+const cookiePaser = require('cookie-parse')
 const employeeRoute = require("./src/routes/employee")
 const contractRoute = require("./src/routes/contract")
 
