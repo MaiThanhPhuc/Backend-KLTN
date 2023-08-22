@@ -12,7 +12,7 @@ const contractController = {
     }
   },
 
-  getAllEmployee: async (req, res) => {
+  getAllContract: async (req, res) => {
     try {
       const contracts = await Contract.find();
       res.status(200).json(contracts)
@@ -24,16 +24,6 @@ const contractController = {
   getContractById: async (req, res) => {
     try {
       const contracts = await Contract.findById(req.param.id);
-      res.status(200).json(contracts)
-    } catch (error) {
-      res.status(500).json(error)
-    }
-  },
-
-  updateContractById: async (req, res) => {
-    try {
-      const contracts = await Contract.findById(req.param.id);
-      await contracts.updateOne({ $set: req.body })
       res.status(200).json(contracts)
     } catch (error) {
       res.status(500).json(error)

@@ -7,7 +7,9 @@ var bodyParser = require('body-parser')
 const cookiePaser = require('cookie-parse')
 const employeeRoute = require("./src/routes/employee")
 const contractRoute = require("./src/routes/contract")
-
+const jobLeaveRoute = require("./src/routes/jobLeave")
+const authRoute = require("./src/routes/auth")
+const departmentRoute = require("./src/routes/department")
 const app = express()
 dotenv.config({ path: __dirname + '/.env' });
 const connectingString = process.env.MONGODB_URL
@@ -34,3 +36,6 @@ app.listen(process.env.PORT || 3000, () => {
 
 app.use('/v1/api/employee', employeeRoute);
 app.use('/v1/api/contract', contractRoute);
+app.use('/v1/api/jobLeave', jobLeaveRoute);
+app.use('/v1/api/department', departmentRoute);
+app.use('/v1/api/auth', authRoute);

@@ -44,18 +44,6 @@ const jobLeaveController = {
     }
   },
 
-  deleteJobLeaveById: async (req, res) => {
-    try {
-      const jobLeave = await JobLeave.findByIdAndDelete(req.param.id);
-
-      await jobLeave.updateOne({ $set: req.body })
-      res.status(200).json("Success")
-    }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
-  }
 }
 
 module.exports = jobLeaveController;
