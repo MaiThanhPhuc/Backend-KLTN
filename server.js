@@ -20,17 +20,12 @@ mongoose.connect(connectingString, { useNewUrlParser: true, useUnifiedTopology: 
 
 app.use(bodyParser.json({ limit: "50mb" }))
 app.use(cors())
+app.use(cookiePaser())
 app.use(morgan("common"))
-
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
 
 app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running`)
 })
-
 
 //Route
 
