@@ -1,11 +1,16 @@
 const { Employee } = require("../models/employee")
-const { Department } = require("../models/otherModels")
-
-
+const generator = require('generate-password');
+const { generatePassword } = require("../utils/generatePassword")
 const employeeController = {
   addEmployee: async (req, res) => {
     try {
       const newEmployee = new Employee(req.body);
+      newEmployee.password = generator.generate({
+        length: 10,
+        uppercase: true,
+        lowercase: true,
+        numbers: true,
+      });
       const savedEmployee = await newEmployee.save();
       res.status(200).json(savedEmployee)
     } catch (error) {

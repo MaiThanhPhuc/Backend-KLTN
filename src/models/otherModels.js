@@ -1,29 +1,63 @@
 const mongoose = require("mongoose")
 
-const contractSchema = new mongoose.Schema({
-  createdDay: {
-    type: Date,
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-  },
-  linkPdf: {
+const officeSchema = new mongoose.Schema({
+  code: {
     type: String,
   },
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Employee"
-  },
-})
-
-const departmentSchema = new mongoose.Schema({
   name: {
     type: String,
   },
   address: {
     type: String,
   },
+  createdDay: {
+    type: Date,
+  },
+  phone: {
+    type: Number
+  }
+})
 
+const departmentSchema = new mongoose.Schema({
+  code: {
+    type: String,
+  },
+
+  name: {
+    type: String,
+  },
+  shortName: {
+    type: String,
+  },
+  office: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Office"
+  },
+  createdDay: {
+    type: Date,
+  },
+})
+
+const teamSchema = new mongoose.Schema({
+  code: {
+    type: String,
+  },
+  name: {
+    type: String,
+  },
+  shortName: {
+    type: String,
+  },
+  createdDay: {
+    type: Date,
+  },
+  leader: {
+    type: mongoose.Schema.Types.ObjectId,
+  },
+  office: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Department"
+  },
 })
 
 const jobLeaveSchema = new mongoose.Schema({
@@ -45,8 +79,10 @@ const jobLeaveSchema = new mongoose.Schema({
   },
 })
 
-let Contract = mongoose.model("Contract", contractSchema)
-let Department = mongoose.model("Department", departmentSchema)
-let JobLeave = mongoose.model("JobLeave", jobLeaveSchema)
+// const Contract = mongoose.model("Contract", contractSchema)
+const Department = mongoose.model("Department", departmentSchema)
+const JobLeave = mongoose.model("JobLeave", jobLeaveSchema)
+const Office = mongoose.model("Office", officeSchema)
+const Team = mongoose.model("Team", teamSchema)
 
-module.exports = { Contract, Department, JobLeave }
+module.exports = { Department, JobLeave, Office, Team }

@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 var bodyParser = require('body-parser')
 
 const employeeRoute = require("./src/routes/employee")
-const contractRoute = require("./src/routes/contract")
+const adminRoute = require("./src/routes/admin")
 
 const app = express()
 dotenv.config({ path: __dirname + '/.env' });
@@ -20,11 +20,6 @@ app.use(bodyParser.json({ limit: "50mb" }))
 app.use(cors())
 app.use(morgan("common"))
 
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
 app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running`)
 })
@@ -33,4 +28,4 @@ app.listen(process.env.PORT || 3000, () => {
 //Route
 
 app.use('/v1/api/employee', employeeRoute);
-app.use('/v1/api/contract', contractRoute);
+app.use('/v1/api/admin', adminRoute);

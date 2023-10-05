@@ -1,6 +1,9 @@
 const mongoose = require("mongoose")
 
 const employeeSchema = new mongoose.Schema({
+  code: {
+    type: String,
+  },
   firstName: {
     type: String,
     require: true
@@ -17,13 +20,14 @@ const employeeSchema = new mongoose.Schema({
     type: String,
     require: true
   },
+  password: {
+    type: String,
+    require: true
+  },
   gender: {
     type: String,
   },
   phone: {
-    type: Number,
-  },
-  taxCode: {
     type: Number,
   },
   citizenId: {
@@ -35,9 +39,13 @@ const employeeSchema = new mongoose.Schema({
   role: {
     type: Number,
   },
-  contract: {
+  team: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Contract"
+    ref: "Team"
+  },
+  office: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Office"
   },
   department: {
     type: mongoose.Schema.Types.ObjectId,
@@ -46,11 +54,7 @@ const employeeSchema = new mongoose.Schema({
   jobLeave: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "JobLeave"
-  },
-  healthyId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Healthy"
-  },
+  }
 })
 
 let Employee = mongoose.model("Employee", employeeSchema)
