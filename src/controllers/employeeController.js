@@ -12,7 +12,7 @@ const employeeController = {
         numbers: true,
       });
       const savedEmployee = await newEmployee.save();
-      res.status(200).json(savedEmployee)
+      res.status(200).json(savedEmployee.id)
     } catch (error) {
       res.status(500).json(error);
     }

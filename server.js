@@ -4,7 +4,6 @@ const mongoose = require('mongoose')
 const morgan = require('morgan')
 const dotenv = require('dotenv')
 var bodyParser = require('body-parser')
-const cookiePaser = require('cookie-parse')
 const employeeRoute = require("./src/routes/employee")
 const adminRoute = require("./src/routes/admin")
 const jobLeaveRoute = require("./src/routes/jobLeave")
@@ -20,7 +19,6 @@ mongoose.connect(connectingString, { useNewUrlParser: true, useUnifiedTopology: 
 
 app.use(bodyParser.json({ limit: "50mb" }))
 app.use(cors())
-app.use(cookiePaser())
 app.use(morgan("common"))
 
 app.listen(process.env.PORT || 3000, () => {
@@ -30,4 +28,4 @@ app.listen(process.env.PORT || 3000, () => {
 //Route
 
 app.use('/v1/api/employee', employeeRoute);
-app.use('/v1/api/contract', contractRoute);
+app.use('/v1/api/admin', adminRoute);
