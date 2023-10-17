@@ -1,10 +1,10 @@
 const mongoose = require("mongoose")
-const { isEmail } = require('validator')
-const bcrypt = require('bcrypt')
+const { isEmail } = require('validator');
+const { Counter } = require("./counters");
 
 const employeeSchema = new mongoose.Schema({
   code: {
-    type: String,
+    type: Number
   },
   firstName: {
     type: String,
@@ -67,12 +67,22 @@ const employeeSchema = new mongoose.Schema({
   }
 })
 
-employeeSchema.pre('save', async function (next) {
-  const salt = await bcrypt.genSalt();
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-})
 
-let Employee = mongoose.model("Employee", employeeSchema)
+employeeSchema.pre('save', function (next) {
+  var doc = this;
+  Counter.findOneAndUpdate({ name: 'Employee' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
+    console.log("...count: " + JSON.stringify(count));
+    doc.code = count.seq;
+    next();
+  })
+    .catch(function (error) {
+      console.error("counter error-> : " + error);
+      throw error;
+    });
+
+});
+
+var Employee = mongoose.model("Employee", employeeSchema)
+
 
 module.exports = { Employee }

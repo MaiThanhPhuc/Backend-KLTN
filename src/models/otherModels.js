@@ -1,8 +1,9 @@
 const mongoose = require("mongoose")
+const { Counter } = require("./counters")
 
 const officeSchema = new mongoose.Schema({
   code: {
-    type: String,
+    type: Number,
   },
   name: {
     type: String,
@@ -14,15 +15,14 @@ const officeSchema = new mongoose.Schema({
     type: Date,
   },
   phone: {
-    type: Number
+    type: String
   }
 })
 
 const departmentSchema = new mongoose.Schema({
   code: {
-    type: String,
+    type: Number,
   },
-
   name: {
     type: String,
   },
@@ -40,7 +40,7 @@ const departmentSchema = new mongoose.Schema({
 
 const teamSchema = new mongoose.Schema({
   code: {
-    type: String,
+    type: Number,
   },
   name: {
     type: String,
@@ -61,6 +61,9 @@ const teamSchema = new mongoose.Schema({
 })
 
 const jobLeaveSchema = new mongoose.Schema({
+  code: {
+    type: Number,
+  },
   leaveType: {
     type: Number,
   },
@@ -79,10 +82,66 @@ const jobLeaveSchema = new mongoose.Schema({
   },
 })
 
+officeSchema.pre('save', function (next) {
+  var doc = this;
+  Counter.findOneAndUpdate({ name: 'Office' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
+    console.log("...count: " + JSON.stringify(count));
+    doc.code = count.seq;
+    next();
+  })
+    .catch(function (error) {
+      console.error("counter error-> : " + error);
+      throw error;
+    });
+
+});
+
+departmentSchema.pre('save', function (next) {
+  var doc = this;
+  Counter.findOneAndUpdate({ name: 'Department' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
+    console.log("...count: " + JSON.stringify(count));
+    doc.code = count.seq;
+    next();
+  })
+    .catch(function (error) {
+      console.error("counter error-> : " + error);
+      throw error;
+    });
+
+});
+
+teamSchema.pre('save', function (next) {
+  var doc = this;
+  Counter.findOneAndUpdate({ name: 'Team' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
+    console.log("...count: " + JSON.stringify(count));
+    doc.code = count.seq;
+    next();
+  })
+    .catch(function (error) {
+      console.error("counter error-> : " + error);
+      throw error;
+    });
+
+});
+
+jobLeaveSchema.pre('save', function (next) {
+  var doc = this;
+  Counter.findOneAndUpdate({ name: 'JobLeave' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
+    console.log("...count: " + JSON.stringify(count));
+    doc.code = count.seq;
+    next();
+  })
+    .catch(function (error) {
+      console.error("counter error-> : " + error);
+      throw error;
+    });
+
+});
+
 // const Contract = mongoose.model("Contract", contractSchema)
-const Department = mongoose.model("Department", departmentSchema)
-const JobLeave = mongoose.model("JobLeave", jobLeaveSchema)
-const Office = mongoose.model("Office", officeSchema)
-const Team = mongoose.model("Team", teamSchema)
+var Department = mongoose.model("Department", departmentSchema)
+var JobLeave = mongoose.model("JobLeave", jobLeaveSchema)
+var Office = mongoose.model("Office", officeSchema)
+var Team = mongoose.model("Team", teamSchema)
 
 module.exports = { Department, JobLeave, Office, Team }

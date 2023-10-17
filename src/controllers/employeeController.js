@@ -1,18 +1,15 @@
 const { Employee } = require("../models/employee")
 const generator = require('generate-password');
-const { generatePassword } = require("../utils/generatePassword")
+
 const employeeController = {
   addEmployee: async (req, res) => {
     try {
       const newEmployee = new Employee(req.body);
-      newEmployee.password = generator.generate({
-        length: 10,
-        uppercase: true,
-        lowercase: true,
-        numbers: true,
-      });
-      const savedEmployee = await newEmployee.save();
-      res.status(200).json(savedEmployee.id)
+      newEmployee.password = generatePassword(newEmployee.password)
+      let uniqueEmail = await Employee.findOne({ email: newEmployee.email });
+      if (uniqueEmail) return res.status(400).send("User already registered.");
+      const savedEmployee = await newEmployee.save()
+      res.status(200).json(savedEmployee)
     } catch (error) {
       res.status(500).json(error);
     }
@@ -62,6 +59,16 @@ const employeeController = {
 
     }
   }
+}
+
+const generatePassword = (password) => {
+  password = generator.generate({
+    length: 10,
+    uppercase: true,
+    lowercase: true,
+    numbers: true,
+  });
+  return password
 }
 
 module.exports = employeeController;
