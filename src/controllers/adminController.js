@@ -16,7 +16,7 @@ const employeeController = {
 
   getAllTeam: async (req, res) => {
     try {
-      const teams = await Team.find();
+      const teams = await Team.find().populate("department").populate("leader");
       res.status(200).json(teams)
     } catch (error) {
       res.status(500).json(error)
@@ -38,6 +38,41 @@ const employeeController = {
     try {
       const result = await Office.findByIdAndUpdate(req.params.id, req.body);
       res.status(200).json("Success")
+    }
+    catch (error) {
+      res.status(500).json(error)
+
+    }
+  },
+
+  searchTeam: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'code',
+        sortBy = 'asc',
+        keyword
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+
+      const skip = (pageIndex - 1) * limit;
+
+      const queries = {}
+
+      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+
+      const result = await Team.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
+        .populate("department").populate("leader");
+      const totalItems = await Team.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
     }
     catch (error) {
       res.status(500).json(error)
@@ -76,6 +111,40 @@ const employeeController = {
       res.status(200).json(data)
     } catch (error) {
       res.status(500).json(error)
+    }
+  },
+
+  searchOffice: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'code',
+        sortBy = 'asc',
+        keyword
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+
+      const skip = (pageIndex - 1) * limit;
+
+      const queries = {}
+
+      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+
+      const result = await Office.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy });
+      const totalItems = await Office.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    }
+    catch (error) {
+      res.status(500).json(error)
+
     }
   },
 
@@ -127,9 +196,44 @@ const employeeController = {
     }
   },
 
+  searchDepartment: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'code',
+        sortBy = 'asc',
+        keyword
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+
+      const skip = (pageIndex - 1) * limit;
+
+      const queries = {}
+
+      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+
+      const result = await Department.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
+        .populate("office").populate("manager");
+      const totalItems = await Department.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    }
+    catch (error) {
+      res.status(500).json(error)
+
+    }
+  },
+
   getAllDepartment: async (req, res) => {
     try {
-      const data = await Department.find();
+      const data = await Department.find().populate("office").populate("manager");
       res.status(200).json(data)
     } catch (error) {
       res.status(500).json(error)

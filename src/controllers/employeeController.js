@@ -6,6 +6,7 @@ const employeeController = {
     try {
       const newEmployee = new Employee(req.body);
       newEmployee.password = generatePassword(newEmployee.password)
+      newEmployee.fullName = `${newEmployee.firstName} ${newEmployee.lastName}`
       let uniqueEmail = await Employee.findOne({ email: newEmployee.email });
       if (uniqueEmail) return res.status(400).send("User already registered.");
       const savedEmployee = await newEmployee.save()
@@ -26,7 +27,7 @@ const employeeController = {
 
   getEmployeeById: async (req, res) => {
     try {
-      const employee = await Employee.findById(req.param.id);
+      const employee = await Employee.findById(req.params.id);
       res.status(200).json(employee)
     }
     catch (error) {
@@ -37,9 +38,9 @@ const employeeController = {
 
   updateEmployeeById: async (req, res) => {
     try {
-      const employee = await Employee.findById(req.param.id);
+      const employee = await Employee.findById(req.params.id);
       await employee.updateOne({ $set: req.body })
-      res.status(200).json("Success")
+      res.status(200).json(true)
     }
     catch (error) {
       res.status(500).json(error)
@@ -58,7 +59,53 @@ const employeeController = {
       res.status(500).json(error)
 
     }
+  },
+
+  searchEmployee: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'code',
+        sortBy = 'asc',
+        keyword
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+      const role = req.query?.role;
+      const status = parseInt(req.query.status);
+      const officeId = req.query.officeId || "";
+      const departmentId = req.query.departmentId || "";
+      const teamId = req.query.teamId || "";
+
+      const skip = (pageIndex - 1) * limit;
+
+      const queries = {}
+
+      if (keyword) queries.fullName = { $regex: keyword, $options: 'i' }
+      if (role) {
+        const temp = role.length > 1 ? role.map(item => parseInt(item)) : [parseInt(role)]
+        queries.role = { $in: temp }
+      }
+      if (status) queries.status = { $in: status }
+      const result = await Employee.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
+        .populate("team").populate("department").populate("office");
+      const totalItems = await Employee.countDocuments(queries)
+
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    }
+    catch (error) {
+      res.status(500).json(error)
+
+    }
   }
+
 }
 
 const generatePassword = (password) => {

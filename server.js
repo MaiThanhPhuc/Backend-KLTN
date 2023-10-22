@@ -8,7 +8,6 @@ const employeeRoute = require("./src/routes/employee")
 const adminRoute = require("./src/routes/admin")
 const jobLeaveRoute = require("./src/routes/jobLeave")
 const authRoute = require("./src/routes/auth")
-const departmentRoute = require("./src/routes/department")
 const app = express()
 dotenv.config({ path: __dirname + '/.env' });
 const connectingString = process.env.MONGODB_URL

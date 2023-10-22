@@ -33,6 +33,10 @@ const departmentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Office"
   },
+  manager: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee"
+  },
   createdDay: {
     type: Date,
   },
@@ -53,8 +57,9 @@ const teamSchema = new mongoose.Schema({
   },
   leader: {
     type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee"
   },
-  office: {
+  department: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department"
   },
