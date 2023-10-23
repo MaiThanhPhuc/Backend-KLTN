@@ -1,6 +1,11 @@
 const { Employee } = require("../models/employee")
 const generator = require('generate-password');
 
+const Status = {
+  ACTIVE: 0,
+  DEACTIVE: 1
+}
+
 const employeeController = {
   addEmployee: async (req, res) => {
     try {
@@ -71,21 +76,22 @@ const employeeController = {
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
       const role = req.query?.role;
-      const status = parseInt(req.query.status);
+      const status = parseInt(req.query.status) || Status.ACTIVE;
       const officeId = req.query.officeId || "";
       const departmentId = req.query.departmentId || "";
       const teamId = req.query.teamId || "";
 
       const skip = (pageIndex - 1) * limit;
 
-      const queries = {}
+      const queries = {
+        status: status
+      }
 
       if (keyword) queries.fullName = { $regex: keyword, $options: 'i' }
       if (role) {
         const temp = role.length > 1 ? role.map(item => parseInt(item)) : [parseInt(role)]
         queries.role = { $in: temp }
       }
-      if (status) queries.status = { $in: status }
       const result = await Employee.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
         .populate("team").populate("department").populate("office");
       const totalItems = await Employee.countDocuments(queries)

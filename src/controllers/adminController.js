@@ -1,5 +1,9 @@
 const { Team, Department, JobLeave, Office } = require("../models/otherModels")
 
+const Status = {
+  ACTIVE: 0,
+  DEACTIVE: 1
+}
 
 const employeeController = {
   addTeam: async (req, res) => {
@@ -7,6 +11,9 @@ const employeeController = {
       const today = new Date()
       const request = new Team(req.body);
       request.createdDay = today;
+      request.status = Status.ACTIVE;
+      let checkValid = await Team.findOne({ name: request.name });
+      if (checkValid) return res.status(400).send("Name already registered.");
       const saveValue = await request.save();
       res.status(200).json(saveValue)
     } catch (error) {
@@ -54,10 +61,12 @@ const employeeController = {
         keyword
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
-
+      const status = parseInt(req.query.status) || Status.ACTIVE;
       const skip = (pageIndex - 1) * limit;
 
-      const queries = {}
+      const queries = {
+        status: status
+      }
 
       if (keyword) queries.name = { $regex: keyword, $options: 'i' }
 
@@ -98,6 +107,9 @@ const employeeController = {
       const today = new Date()
       const request = new Office(req.body);
       request.createdDay = today;
+      request.status = Status.ACTIVE;
+      let checkValid = await Office.findOne({ name: request.name });
+      if (checkValid) return res.status(400).send("Name already registered.");
       const saveValue = await request.save();
       res.status(200).json(saveValue.id)
     } catch (error) {
@@ -123,10 +135,12 @@ const employeeController = {
         keyword
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
-
+      const status = parseInt(req.query.status) || Status.ACTIVE;
       const skip = (pageIndex - 1) * limit;
 
-      const queries = {}
+      const queries = {
+        status: status
+      }
 
       if (keyword) queries.name = { $regex: keyword, $options: 'i' }
 
@@ -188,7 +202,10 @@ const employeeController = {
     try {
       const today = new Date()
       const request = new Department(req.body);
+      let checkValid = await Department.findOne({ name: request.name });
+      if (checkValid) return res.status(400).send("Name already registered.");
       request.createdDay = today
+      request.status = Status.ACTIVE;
       const saveValue = await request.save();
       res.status(200).json(saveValue)
     } catch (error) {
@@ -205,10 +222,12 @@ const employeeController = {
         keyword
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
-
+      const status = parseInt(req.query.status) || Status.ACTIVE;
       const skip = (pageIndex - 1) * limit;
 
-      const queries = {}
+      const queries = {
+        status: status
+      }
 
       if (keyword) queries.name = { $regex: keyword, $options: 'i' }
 

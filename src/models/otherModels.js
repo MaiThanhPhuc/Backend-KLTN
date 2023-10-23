@@ -16,7 +16,11 @@ const officeSchema = new mongoose.Schema({
   },
   phone: {
     type: String
-  }
+  },
+  status: {
+    type: Number
+  },
+
 })
 
 const departmentSchema = new mongoose.Schema({
@@ -40,6 +44,9 @@ const departmentSchema = new mongoose.Schema({
   createdDay: {
     type: Date,
   },
+  status: {
+    type: Number
+  }
 })
 
 const teamSchema = new mongoose.Schema({
@@ -63,6 +70,9 @@ const teamSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department"
   },
+  status: {
+    type: Number
+  }
 })
 
 const jobLeaveSchema = new mongoose.Schema({
@@ -85,6 +95,9 @@ const jobLeaveSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Employee"
   },
+  status: {
+    type: Number
+  }
 })
 
 officeSchema.pre('save', function (next) {
