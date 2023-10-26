@@ -47,6 +47,9 @@ const employeeSchema = new mongoose.Schema({
   role: {
     type: Number,
   },
+  updateDate: {
+    type: Date,
+  },
   team: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Team"
@@ -59,10 +62,10 @@ const employeeSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department"
   },
-  jobLeave: {
+  leaveType: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: "JobLeave"
-  }
+    ref: "EmployeeLeaveType"
+  }]
 })
 
 

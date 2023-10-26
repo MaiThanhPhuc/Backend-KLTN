@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 var bodyParser = require('body-parser')
 const employeeRoute = require("./src/routes/employee")
 const adminRoute = require("./src/routes/admin")
-const jobLeaveRoute = require("./src/routes/jobLeave")
+const leaveTypeRoute = require("./src/routes/leaveType")
 const authRoute = require("./src/routes/auth")
 const app = express()
 dotenv.config({ path: __dirname + '/.env' });
@@ -28,3 +28,4 @@ app.listen(process.env.PORT || 3000, () => {
 
 app.use('/v1/api/employee', employeeRoute);
 app.use('/v1/api/admin', adminRoute);
+app.use('/v1/api/leaveType', leaveTypeRoute);

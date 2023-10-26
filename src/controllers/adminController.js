@@ -1,4 +1,4 @@
-const { Team, Department, JobLeave, Office } = require("../models/otherModels")
+const { Team, Department, Office } = require("../models/otherModels")
 
 const Status = {
   ACTIVE: 0,
@@ -10,7 +10,7 @@ const employeeController = {
     try {
       const today = new Date()
       const request = new Team(req.body);
-      request.createdDay = today;
+      request.updateDate = today;
       request.status = Status.ACTIVE;
       let checkValid = await Team.findOne({ name: request.name });
       if (checkValid) return res.status(400).send("Name already registered.");
@@ -43,6 +43,7 @@ const employeeController = {
 
   updateTeamById: async (req, res) => {
     try {
+      req.body.updateDate = today;
       const result = await Office.findByIdAndUpdate(req.params.id, req.body);
       res.status(200).json("Success")
     }
@@ -91,6 +92,7 @@ const employeeController = {
 
   deleteTeamById: async (req, res) => {
     try {
+      req.body.updateDate = today;
       const result = await Team.findByIdAndDelete(req.param.id);
 
       await result.updateOne({ $set: req.body })
@@ -106,7 +108,7 @@ const employeeController = {
     try {
       const today = new Date()
       const request = new Office(req.body);
-      request.createdDay = today;
+      request.updateDate = today;
       request.status = Status.ACTIVE;
       let checkValid = await Office.findOne({ name: request.name });
       if (checkValid) return res.status(400).send("Name already registered.");
@@ -175,6 +177,7 @@ const employeeController = {
 
   updateOfficeById: async (req, res) => {
     try {
+      req.body.updateDate = today;
       const result = await Office.findByIdAndUpdate(req.params.id, req.body);
       res.status(200).json("Success")
     }
@@ -187,7 +190,7 @@ const employeeController = {
   deleteOfficeById: async (req, res) => {
     try {
       const result = await Office.findByIdAndDelete(req.param.id);
-
+      req.body.updateDate = today;
       await result.updateOne({ $set: req.body })
       res.status(200).json("Success")
     }
@@ -204,7 +207,7 @@ const employeeController = {
       const request = new Department(req.body);
       let checkValid = await Department.findOne({ name: request.name });
       if (checkValid) return res.status(400).send("Name already registered.");
-      request.createdDay = today
+      request.updateDate = today
       request.status = Status.ACTIVE;
       const saveValue = await request.save();
       res.status(200).json(saveValue)
@@ -272,7 +275,8 @@ const employeeController = {
 
   updateDepartmentById: async (req, res) => {
     try {
-      const result = await Office.findByIdAndUpdate(req.params.id, req.body);
+      req.body.updateDate = today;
+      const result = await Department.findByIdAndUpdate(req.params.id, req.body);
       res.status(200).json("Success")
     }
     catch (error) {
@@ -283,6 +287,7 @@ const employeeController = {
 
   deleteDepartmentById: async (req, res) => {
     try {
+      req.body.updateDate = today;
       const result = await Department.findByIdAndDelete(req.param.id);
 
       await result.updateOne({ $set: req.body })
@@ -293,7 +298,6 @@ const employeeController = {
 
     }
   }
-
 }
 
 module.exports = employeeController;

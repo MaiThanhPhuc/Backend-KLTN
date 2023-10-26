@@ -1,5 +1,6 @@
 const { Employee } = require("../models/employee")
 const generator = require('generate-password');
+const { EmployeeLeaveType } = require("../models/leaveType");
 
 const Status = {
   ACTIVE: 0,
@@ -33,7 +34,9 @@ const employeeController = {
   getEmployeeById: async (req, res) => {
     try {
       const employee = await Employee.findById(req.params.id);
-      res.status(200).json(employee)
+      const empLeaveType = await EmployeeLeaveType.findOne({ employee: req.params.id }).populate("leaveType");
+      const reponse = { employeeInfo: employee, leaveType: empLeaveType }
+      res.status(200).json(reponse)
     }
     catch (error) {
       res.status(500).json(error)
@@ -110,7 +113,7 @@ const employeeController = {
       res.status(500).json(error)
 
     }
-  }
+  },
 
 }
 

@@ -11,7 +11,7 @@ const officeSchema = new mongoose.Schema({
   address: {
     type: String,
   },
-  createdDay: {
+  updateDate: {
     type: Date,
   },
   phone: {
@@ -41,7 +41,7 @@ const departmentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Employee"
   },
-  createdDay: {
+  updateDate: {
     type: Date,
   },
   status: {
@@ -59,7 +59,7 @@ const teamSchema = new mongoose.Schema({
   shortName: {
     type: String,
   },
-  createdDay: {
+  updateDate: {
     type: Date,
   },
   leader: {
@@ -75,30 +75,7 @@ const teamSchema = new mongoose.Schema({
   }
 })
 
-const jobLeaveSchema = new mongoose.Schema({
-  code: {
-    type: Number,
-  },
-  leaveType: {
-    type: Number,
-  },
-  total: {
-    type: Number,
-  },
-  remain: {
-    type: Number,
-  },
-  taken: {
-    type: Number,
-  },
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Employee"
-  },
-  status: {
-    type: Number
-  }
-})
+
 
 officeSchema.pre('save', function (next) {
   var doc = this;
@@ -142,24 +119,8 @@ teamSchema.pre('save', function (next) {
 
 });
 
-jobLeaveSchema.pre('save', function (next) {
-  var doc = this;
-  Counter.findOneAndUpdate({ name: 'JobLeave' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
-    console.log("...count: " + JSON.stringify(count));
-    doc.code = count.seq;
-    next();
-  })
-    .catch(function (error) {
-      console.error("counter error-> : " + error);
-      throw error;
-    });
-
-});
-
-// const Contract = mongoose.model("Contract", contractSchema)
 var Department = mongoose.model("Department", departmentSchema)
-var JobLeave = mongoose.model("JobLeave", jobLeaveSchema)
 var Office = mongoose.model("Office", officeSchema)
 var Team = mongoose.model("Team", teamSchema)
 
-module.exports = { Department, JobLeave, Office, Team }
+module.exports = { Department, Office, Team }
