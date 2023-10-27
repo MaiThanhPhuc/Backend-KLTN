@@ -5,23 +5,34 @@ const employeeLeaveTypeSchema = new mongoose.Schema({
   code: {
     type: Number,
   },
-  leaveType: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "LeaveType"
-    }
-  ],
+  leaveType:
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "LeaveType"
+  }
+  ,
   total: {
-    type: Number,
-  },
-  default: {
     type: Number,
   },
   remain: {
     type: Number,
+    default: 0,
   },
   taken: {
     type: Number,
+    default: 0,
+  },
+  forward: {
+    type: Number,
+    default: 0,
+  },
+  paid: {
+    type: Number,
+    default: 0,
+  },
+  bonus: {
+    type: Number,
+    default: 0,
   },
   status: {
     type: Number
@@ -69,9 +80,6 @@ leaveTypeSchema.pre('save', function (next) {
     });
 
 });
-
-
-
 
 var LeaveType = mongoose.model("LeaveType", leaveTypeSchema)
 var EmployeeLeaveType = mongoose.model("EmployeeLeaveType", employeeLeaveTypeSchema)

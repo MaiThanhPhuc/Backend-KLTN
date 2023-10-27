@@ -34,7 +34,7 @@ const employeeController = {
   getEmployeeById: async (req, res) => {
     try {
       const employee = await Employee.findById(req.params.id);
-      const empLeaveType = await EmployeeLeaveType.findOne({ employee: req.params.id }).populate("leaveType");
+      const empLeaveType = await EmployeeLeaveType.find({ employee: req.params.id }).populate("leaveType");
       const reponse = { employeeInfo: employee, leaveType: empLeaveType }
       res.status(200).json(reponse)
     }

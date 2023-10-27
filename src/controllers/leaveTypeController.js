@@ -1,3 +1,4 @@
+const { Employee } = require("../models/employee");
 const { LeaveType, EmployeeLeaveType } = require("../models/leaveType");
 
 const Status = {
@@ -106,14 +107,22 @@ const leaveTypeController = {
 
   addEmployeeLeaveType: async (req, res) => {
     try {
-      var request = new EmployeeLeaveType(req.body)
-      const saveValue = await request.save();
-      res.status(200).json(saveValue)
+      await EmployeeLeaveType.create(req.body);
+      res.status(200).json("Success")
+    } catch (error) {
+      res.status(500).json(error)
+    }
+  },
+
+  updateEmployeeLeaveTypeById: async (req, res) => {
+    try {
+      await EmployeeLeaveType.findByIdAndUpdate(req.body._id, req.body)
       res.status(200).json("Success")
     } catch (error) {
       res.status(500).json(error)
     }
   }
+
 }
 
 module.exports = leaveTypeController;
