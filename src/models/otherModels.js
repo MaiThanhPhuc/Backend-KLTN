@@ -20,7 +20,10 @@ const officeSchema = new mongoose.Schema({
   status: {
     type: Number
   },
-
+  department: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Department"
+  }]
 })
 
 const departmentSchema = new mongoose.Schema({
@@ -46,7 +49,11 @@ const departmentSchema = new mongoose.Schema({
   },
   status: {
     type: Number
-  }
+  },
+  team: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Team"
+  }]
 })
 
 const teamSchema = new mongoose.Schema({

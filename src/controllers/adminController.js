@@ -32,7 +32,7 @@ const employeeController = {
 
   getTeamById: async (req, res) => {
     try {
-      const result = await Team.findById(req.param.id);
+      const result = await Team.findById(req.params.id);
       res.status(200).json(result)
     }
     catch (error) {
@@ -43,6 +43,7 @@ const employeeController = {
 
   updateTeamById: async (req, res) => {
     try {
+      const today = new Date()
       req.body.updateDate = today;
       const result = await Office.findByIdAndUpdate(req.params.id, req.body);
       res.status(200).json("Success")
@@ -92,8 +93,9 @@ const employeeController = {
 
   deleteTeamById: async (req, res) => {
     try {
+      const today = new Date()
       req.body.updateDate = today;
-      const result = await Team.findByIdAndDelete(req.param.id);
+      const result = await Team.findByIdAndDelete(req.params.id);
 
       await result.updateOne({ $set: req.body })
       res.status(200).json("Success")
@@ -166,7 +168,7 @@ const employeeController = {
 
   getOfficeById: async (req, res) => {
     try {
-      const result = await Office.findById(req.param.id);
+      const result = await Office.findById(req.params.id);
       res.status(200).json(result)
     }
     catch (error) {
@@ -177,6 +179,7 @@ const employeeController = {
 
   updateOfficeById: async (req, res) => {
     try {
+      const today = new Date()
       req.body.updateDate = today;
       const result = await Office.findByIdAndUpdate(req.params.id, req.body);
       res.status(200).json("Success")
@@ -189,7 +192,8 @@ const employeeController = {
 
   deleteOfficeById: async (req, res) => {
     try {
-      const result = await Office.findByIdAndDelete(req.param.id);
+      const today = new Date()
+      const result = await Office.findByIdAndDelete(req.params.id);
       req.body.updateDate = today;
       await result.updateOne({ $set: req.body })
       res.status(200).json("Success")
@@ -264,7 +268,9 @@ const employeeController = {
 
   getDepartmentById: async (req, res) => {
     try {
-      const result = await Department.findById(req.param.id);
+      const result = await Department.findById(req.params.id);
+      const team = await Team.find({ department: req.params.id });
+      result.team = team;
       res.status(200).json(result)
     }
     catch (error) {
@@ -275,6 +281,7 @@ const employeeController = {
 
   updateDepartmentById: async (req, res) => {
     try {
+      const today = new Date()
       req.body.updateDate = today;
       const result = await Department.findByIdAndUpdate(req.params.id, req.body);
       res.status(200).json("Success")
@@ -287,8 +294,9 @@ const employeeController = {
 
   deleteDepartmentById: async (req, res) => {
     try {
+      const today = new Date()
       req.body.updateDate = today;
-      const result = await Department.findByIdAndDelete(req.param.id);
+      const result = await Department.findByIdAndDelete(req.params.id);
 
       await result.updateOne({ $set: req.body })
       res.status(200).json("Success")

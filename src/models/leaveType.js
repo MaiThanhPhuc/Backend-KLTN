@@ -67,6 +67,49 @@ const leaveTypeSchema = new mongoose.Schema({
   }
 })
 
+const leaveRequest = new mongoose.Schema({
+  code: {
+    type: Number,
+  },
+  leaveType:
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "LeaveType"
+  },
+  reason: {
+    type: String,
+  },
+  date: {
+    type: Date,
+  },
+  timeType: {
+    type: Number,
+  },
+  timeValue: {
+    type: Number,
+  },
+  approvalStatus: [
+    {
+      employee: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Employee"
+      },
+      description: {
+        type: String,
+      },
+      status: {
+        type: Number
+      },
+      updateDate: {
+        type: Date,
+      }
+    }
+  ],
+  updateDate: {
+    type: Date,
+  }
+})
+
 leaveTypeSchema.pre('save', function (next) {
   var doc = this;
   Counter.findOneAndUpdate({ name: 'LeaveType' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
@@ -78,10 +121,23 @@ leaveTypeSchema.pre('save', function (next) {
       console.error("counter error-> : " + error);
       throw error;
     });
+});
 
+leaveRequest.pre('save', function (next) {
+  var doc = this;
+  Counter.findOneAndUpdate({ name: 'LeaveRequest' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
+    console.log("...count: " + JSON.stringify(count));
+    doc.code = count.seq;
+    next();
+  })
+    .catch(function (error) {
+      console.error("counter error-> : " + error);
+      throw error;
+    });
 });
 
 var LeaveType = mongoose.model("LeaveType", leaveTypeSchema)
 var EmployeeLeaveType = mongoose.model("EmployeeLeaveType", employeeLeaveTypeSchema)
+var LeaveRequest = mongoose.model("LeaveRequest", leaveRequest)
 
-module.exports = { EmployeeLeaveType, LeaveType }
+module.exports = { EmployeeLeaveType, LeaveType, LeaveRequest }
