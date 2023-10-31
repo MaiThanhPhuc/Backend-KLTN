@@ -4,6 +4,7 @@ const router = require('express').Router();
 
 // ADD LeaveType
 router.get('/getAllLeaveType', leaveTypeController.getAllLeaveType)
+router.get('/getLeaveRequest', leaveTypeController.getLeaveRequest)
 router.get('/:id', leaveTypeController.getLeaveTypeById)
 router.post('/', leaveTypeController.addLeaveType)
 router.post('/addEmployeeLeaveType', leaveTypeController.addEmployeeLeaveType)

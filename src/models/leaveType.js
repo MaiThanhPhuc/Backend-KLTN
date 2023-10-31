@@ -68,6 +68,10 @@ const leaveTypeSchema = new mongoose.Schema({
 })
 
 const leaveRequest = new mongoose.Schema({
+  employee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee"
+  },
   code: {
     type: Number,
   },
@@ -107,6 +111,9 @@ const leaveRequest = new mongoose.Schema({
   ],
   updateDate: {
     type: Date,
+  },
+  status: {
+    type: Number,
   }
 })
 

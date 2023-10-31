@@ -158,15 +158,6 @@ const leaveTypeController = {
       var approval = await getAprrovalById(req.body.employee)
       request.approvalStatus = approval
       const result = await request.save();
-      if (result) {
-        const employeeLeave = await EmployeeLeaveType.findOne({
-          employee: req.body.employee,
-          leaveType: req.body.leaveType,
-        })
-        employeeLeave.taken = employeeLeave.taken + timeValue
-        employeeLeave.total = employeeLeave.total - timeValue
-        await EmployeeLeaveType.findByIdAndUpdate(employeeLeave._id, employeeLeave)
-      }
       res.status(200).json(result)
     } catch (error) {
       res.status(500).json(error)
@@ -179,13 +170,18 @@ const leaveTypeController = {
       req.body.updateDate = today;
       const result = await LeaveRequest.findByIdAndUpdate(req.params.id, req.body);
       if (result) {
-        const employeeLeave = await EmployeeLeaveType.findOne({
-          employee: req.body.employee,
-          leaveType: req.body.leaveType,
-        })
-        employeeLeave.taken = employeeLeave.taken + timeValue
-        employeeLeave.total = employeeLeave.total - timeValue
-        await EmployeeLeaveType.findByIdAndUpdate(employeeLeave._id, employeeLeave)
+        if (result.approvalStatus.every(item => item.status == StatusRequest.APPROVED)) {
+          var employeeLeave = await EmployeeLeaveType.findOne({
+            employee: req.body.employee,
+            leaveType: req.body.leaveType,
+          })
+
+          employeeLeave.taken = employeeLeave.taken + timeValue
+          employeeLeave.total = employeeLeave.total - timeValue
+          await EmployeeLeaveType.findByIdAndUpdate(employeeLeave._id, employeeLeave)
+          await LeaveRequest.findByIdAndUpdate(req.params.id, { status: StatusRequest.APPROVED })
+        }
+
       }
       res.status(200).json("Success")
     }
@@ -195,6 +191,38 @@ const leaveTypeController = {
     }
   },
 
+  getLeaveRequest: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'updateDate',
+        sortBy = 'asc',
+        employeeId
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+      const skip = (pageIndex - 1) * limit;
+
+      const queries = {
+        employee: employeeId
+      }
+
+      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("leaveType");
+      const totalItems = await LeaveRequest.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    }
+    catch (error) {
+      res.status(500).json(error)
+
+    }
+  },
 
 };
 

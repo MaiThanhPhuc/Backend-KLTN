@@ -10,5 +10,4 @@ router.get('/', employeeController.searchEmployee)
 router.put('/:id', employeeController.updateEmployeeById)
 router.delete('/:id', employeeController.deleteEmployeeById)
 
-
 module.exports = router;

@@ -1,3 +1,4 @@
+const { Employee } = require("../models/employee");
 const { Team, Department, Office } = require("../models/otherModels")
 
 const Status = {
@@ -45,7 +46,10 @@ const employeeController = {
     try {
       const today = new Date()
       req.body.updateDate = today;
-      const result = await Office.findByIdAndUpdate(req.params.id, req.body);
+      const result = await Team.findByIdAndUpdate(req.params.id, req.body);
+      if (result.leader) {
+        await Employee.findByIdAndUpdate(result.leader, { team: result._id })
+      }
       res.status(200).json("Success")
     }
     catch (error) {
@@ -284,6 +288,9 @@ const employeeController = {
       const today = new Date()
       req.body.updateDate = today;
       const result = await Department.findByIdAndUpdate(req.params.id, req.body);
+      if (result.manager) {
+        await Employee.findByIdAndUpdate(result.manager, { manager: result._id })
+      }
       res.status(200).json("Success")
     }
     catch (error) {

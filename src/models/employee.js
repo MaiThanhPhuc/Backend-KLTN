@@ -50,6 +50,10 @@ const employeeSchema = new mongoose.Schema({
   updateDate: {
     type: Date,
   },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
   team: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Team"

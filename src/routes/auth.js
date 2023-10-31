@@ -1,8 +1,13 @@
-const authControler = require('../controllers/authController')
-
+const authController = require('../controllers/authController')
+const { verifyToken } = require("../controllers/verifyToken");
 const router = require('express').Router();
 
 // ADD Employee
-router.post('/', authControler.login)
+//REFRESH TOKEN
+router.post("/refresh", authController.requestRefreshToken);
+//LOG IN
+router.post("/login", authController.loginUser);
+//LOG OUT
+router.post("/logout", verifyToken, authController.logOut);
 
 module.exports = router;

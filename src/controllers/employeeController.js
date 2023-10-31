@@ -1,10 +1,19 @@
 const { Employee } = require("../models/employee")
 const generator = require('generate-password');
-const { EmployeeLeaveType } = require("../models/leaveType");
+const bcrypt = require('bcrypt');
+const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
+const { Team, Department } = require("../models/otherModels");
 
 const Status = {
   ACTIVE: 0,
   DEACTIVE: 1
+}
+
+const EmployeeRole = {
+  ADMIN: 0,
+  MANAGER: 1,
+  LEADER: 2,
+  MEMBER: 3,
 }
 
 const employeeController = {
@@ -13,9 +22,18 @@ const employeeController = {
       const newEmployee = new Employee(req.body);
       newEmployee.password = generatePassword(newEmployee.password)
       newEmployee.fullName = `${newEmployee.firstName} ${newEmployee.lastName}`
+
       let uniqueEmail = await Employee.findOne({ email: newEmployee.email });
       if (uniqueEmail) return res.status(400).send("User already registered.");
       const savedEmployee = await newEmployee.save()
+      if (savedEmployee) {
+        if (savedEmployee.role == EmployeeRole.LEADER) {
+          await Team.findByIdAndUpdate(savedEmployee.team, { leader: savedEmployee._id })
+        }
+        if (savedEmployee.role == EmployeeRole.MANAGER) {
+          await Department.findByIdAndUpdate(savedEmployee.department, { manager: savedEmployee._id })
+        }
+      }
       res.status(200).json(savedEmployee)
     } catch (error) {
       res.status(500).json(error);
@@ -48,6 +66,14 @@ const employeeController = {
     try {
       const employee = await Employee.findById(req.params.id);
       await employee.updateOne({ $set: req.body })
+      if (employee) {
+        if (employee.role == EmployeeRole.LEADER) {
+          await Team.findByIdAndUpdate(employee.team, { leader: employee._id })
+        }
+        if (employee.role == EmployeeRole.MANAGER) {
+          await Department.findByIdAndUpdate(employee.department, { manager: employee._id })
+        }
+      }
       res.status(200).json(true)
     }
     catch (error) {
@@ -112,6 +138,36 @@ const employeeController = {
     catch (error) {
       res.status(500).json(error)
 
+    }
+  },
+
+  searchLeaveRequest: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'updateDate',
+        sortBy = 'asc',
+        keyword
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+      const skip = (pageIndex - 1) * limit;
+
+      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+
+      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy });
+      const totalItems = await LeaveRequest.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    }
+    catch (error) {
+      res.status(500).json(error)
     }
   },
 
