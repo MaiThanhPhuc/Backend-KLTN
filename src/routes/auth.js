@@ -1,5 +1,5 @@
 const authController = require('../controllers/authController')
-const { verifyToken } = require("../controllers/verifyToken");
+const { verifyToken } = require("../middlewares/verifyToken");
 const router = require('express').Router();
 
 // ADD Employee
