@@ -1,6 +1,6 @@
 const { Employee } = require("../models/employee")
 const jwt = require('jsonwebtoken')
-
+const bcrypt = require('bcrypt')
 let refreshTokens = [];
 
 const authController = {
@@ -8,7 +8,7 @@ const authController = {
   generateAccessToken: (user) => {
     return jwt.sign(
       {
-        id: user.id,
+        id: user._id,
         isAdmin: user.isAdmin,
       },
       process.env.JWT_ACCESS_KEY,
@@ -29,32 +29,32 @@ const authController = {
 
   loginUser: async (req, res) => {
     try {
-      const user = await Employee.findOne({ username: req.body.email });
+      const user = await Employee.findOne({ email: req.body.email });
       if (!user) {
         res.status(404).json("Email not exist!");
       }
-      const validPassword = await bcrypt.compare(
-        req.body.password,
-        user.password
-      );
-      if (!validPassword) {
-        res.status(404).json("Incorrect password");
-      }
-      if (user && validPassword) {
-        //Generate access token
-        const accessToken = authController.generateAccessToken(user);
-        //Generate refresh token
-        const refreshToken = authController.generateRefreshToken(user);
-        refreshTokens.push(refreshToken);
-        //STORE REFRESH TOKEN IN COOKIE
-        res.cookie("refreshToken", refreshToken, {
-          httpOnly: true,
-          secure: false,
-          path: "/",
-          sameSite: "strict",
-        });
-        const { password, ...others } = user._doc;
-        res.status(200).json({ ...others, accessToken, refreshToken });
+      else {
+        const validPassword = req.body.password === user.password;
+
+        if (!validPassword) {
+          res.status(404).json("Incorrect password");
+        }
+        if (user && validPassword) {
+          //Generate access token
+          const accessToken = authController.generateAccessToken(user);
+          //Generate refresh token
+          const refreshToken = authController.generateRefreshToken(user);
+          refreshTokens.push(refreshToken);
+          //STORE REFRESH TOKEN IN COOKIE
+          res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: false,
+            path: "/",
+            sameSite: "strict",
+          });
+          const { password, isAdmin, ...others } = user._doc;
+          res.status(200).json({ ...others, accessToken, refreshToken });
+        }
       }
     } catch (err) {
       res.status(500).json(err);

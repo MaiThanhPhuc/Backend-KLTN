@@ -29,3 +29,4 @@ app.listen(process.env.PORT || 3000, () => {
 app.use('/v1/api/employee', employeeRoute);
 app.use('/v1/api/admin', adminRoute);
 app.use('/v1/api/leaveType', leaveTypeRoute);
+app.use('/v1/api/auth', authRoute);
