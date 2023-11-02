@@ -10,9 +10,10 @@ const authController = {
       {
         id: user._id,
         isAdmin: user.isAdmin,
+        role: user.role,
       },
       process.env.JWT_ACCESS_KEY,
-      { expiresIn: "30s" }
+      { expiresIn: "30m" }
     );
   },
 

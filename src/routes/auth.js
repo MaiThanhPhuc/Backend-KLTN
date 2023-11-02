@@ -10,4 +10,4 @@ router.post("/login", authController.loginUser);
 //LOG OUT
 router.post("/logout", verifyToken, authController.logOut);
 
-module.exports = router;
+module.exports = router; 

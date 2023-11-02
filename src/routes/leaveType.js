@@ -1,17 +1,17 @@
 const leaveTypeController = require('../controllers/leaveTypeController');
-
+const { verifyToken, verifyTokenAndUserAuthorization, verifyTokenAndAdmin } = require("../middlewares/verifyToken");
 const router = require('express').Router();
 
 // ADD LeaveType
-router.get('/getAllLeaveType', leaveTypeController.getAllLeaveType)
-router.get('/getLeaveRequest', leaveTypeController.getLeaveRequest)
-router.get('/:id', leaveTypeController.getLeaveTypeById)
-router.post('/', leaveTypeController.addLeaveType)
-router.post('/addEmployeeLeaveType', leaveTypeController.addEmployeeLeaveType)
-router.post('/createLeaveRequest', leaveTypeController.createLeaveRequest)
-router.post('/updateEmployeeLeaveType', leaveTypeController.updateEmployeeLeaveTypeById)
-router.get('/', leaveTypeController.searchLeaveType)
-router.put('/:id', leaveTypeController.updateLeaveTypeById)
-router.delete('/:id', leaveTypeController.deleteLeaveTypeById)
+router.get('/getAllLeaveType', verifyToken, leaveTypeController.getAllLeaveType)
+router.get('/getLeaveRequest', verifyToken, leaveTypeController.getLeaveRequest)
+router.get('/:id', verifyToken, leaveTypeController.getLeaveTypeById)
+router.post('/', verifyTokenAndAdmin, leaveTypeController.addLeaveType)
+router.post('/addEmployeeLeaveType', verifyTokenAndUserAuthorization, leaveTypeController.addEmployeeLeaveType)
+router.post('/createLeaveRequest', verifyTokenAndUserAuthorization, leaveTypeController.createLeaveRequest)
+router.post('/updateEmployeeLeaveType', verifyTokenAndUserAuthorization, leaveTypeController.updateEmployeeLeaveTypeById)
+router.get('/', verifyToken, leaveTypeController.searchLeaveType)
+router.put('/:id', verifyTokenAndUserAuthorization, leaveTypeController.updateLeaveTypeById)
+router.delete('/:id', verifyTokenAndUserAuthorization, leaveTypeController.deleteLeaveTypeById)
 
 module.exports = router;

@@ -1,13 +1,13 @@
 const employeeController = require('../controllers/employeeController')
-const { verifyToken, verifyTokenAndUserAuthorization } = require("../middlewares/verifyToken");
+const { verifyToken, verifyTokenAndUserAuthorization, verifyTokenAndAdmin } = require("../middlewares/verifyToken");
 const router = require('express').Router();
 
 // ADD Employee
-router.get('/getAll', verifyTokenAndUserAuthorization, employeeController.getAllEmployee)
-router.get('/:id', employeeController.getEmployeeById)
-router.post('/', employeeController.addEmployee)
-router.get('/', employeeController.searchEmployee)
-router.put('/:id', employeeController.updateEmployeeById)
-router.delete('/:id', employeeController.deleteEmployeeById)
+router.get('/getAll', verifyToken, employeeController.getAllEmployee)
+router.get('/:id', verifyTokenAndUserAuthorization, employeeController.getEmployeeById)
+router.post('/', verifyTokenAndAdmin, employeeController.addEmployee)
+router.get('/', verifyToken, employeeController.searchEmployee)
+router.put('/:id', verifyTokenAndUserAuthorization, employeeController.updateEmployeeById)
+router.delete('/:id', verifyTokenAndAdmin, employeeController.deleteEmployeeById)
 
 module.exports = router;
