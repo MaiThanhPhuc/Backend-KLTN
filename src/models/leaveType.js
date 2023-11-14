@@ -67,7 +67,7 @@ const leaveTypeSchema = new mongoose.Schema({
   }
 })
 
-const leaveRequest = new mongoose.Schema({
+const leaveRequestSchema = new mongoose.Schema({
   employee: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Employee"
@@ -130,7 +130,7 @@ leaveTypeSchema.pre('save', function (next) {
     });
 });
 
-leaveRequest.pre('save', function (next) {
+leaveRequestSchema.pre('save', function (next) {
   var doc = this;
   Counter.findOneAndUpdate({ name: 'LeaveRequest' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
     console.log("...count: " + JSON.stringify(count));
@@ -145,6 +145,6 @@ leaveRequest.pre('save', function (next) {
 
 var LeaveType = mongoose.model("LeaveType", leaveTypeSchema)
 var EmployeeLeaveType = mongoose.model("EmployeeLeaveType", employeeLeaveTypeSchema)
-var LeaveRequest = mongoose.model("LeaveRequest", leaveRequest)
+var LeaveRequest = mongoose.model("LeaveRequest", leaveRequestSchema)
 
 module.exports = { EmployeeLeaveType, LeaveType, LeaveRequest }

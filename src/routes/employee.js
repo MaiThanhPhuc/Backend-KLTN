@@ -3,8 +3,9 @@ const { verifyToken, verifyTokenAndUserAuthorization, verifyTokenAndAdmin } = re
 const router = require('express').Router();
 
 // ADD Employee
+router.get('/getAbsentByDate', verifyToken, employeeController.getAbsentByDate)
 router.get('/getAll', verifyToken, employeeController.getAllEmployee)
-router.get('/:id', verifyTokenAndUserAuthorization, employeeController.getEmployeeById)
+router.get('/:id', verifyToken, employeeController.getEmployeeById)
 router.post('/', verifyTokenAndAdmin, employeeController.addEmployee)
 router.get('/', verifyToken, employeeController.searchEmployee)
 router.put('/:id', verifyTokenAndUserAuthorization, employeeController.updateEmployeeById)

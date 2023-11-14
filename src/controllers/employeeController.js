@@ -3,6 +3,7 @@ const generator = require('generate-password');
 const bcrypt = require('bcrypt');
 const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
 const { Team, Department } = require("../models/otherModels");
+const { populate } = require("dotenv");
 
 const Status = {
   ACTIVE: 0,
@@ -140,21 +141,55 @@ const employeeController = {
 
     }
   },
-
-  searchLeaveRequest: async (req, res) => {
+  getAbsentByDate: async (req, res) => {
     try {
       const {
         limit = 5,
         orderBy = 'updateDate',
         sortBy = 'asc',
-        keyword
+        keyword,
+        dateFrom,
+        dateTo
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
       const skip = (pageIndex - 1) * limit;
 
-      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+      var start = new Date(dateFrom);
+      start.setDate(start.getUTCDate());
+      start = new Date(start.setHours(0, 0, 0, 0)).toISOString()
 
-      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy });
+      var end = new Date();
+      end.setDate(end.getUTCDate());
+      end = new Date(end.setHours(23, 59, 59, 999)).toISOString()
+
+      const queries = {
+        date: {
+          $gte: start,
+          $lte: end,
+        }
+      }
+
+      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
+        .populate(
+          {
+            path: 'employee',
+            populate: [
+              {
+                path: 'department',
+                model: 'Department'
+              },
+              {
+                path: 'team',
+                model: 'Team'
+              },
+              {
+                path: 'office',
+                model: 'Office'
+              }
+            ]
+          },
+        );
       const totalItems = await LeaveRequest.countDocuments(queries)
 
       res.status(200).json({
@@ -170,7 +205,6 @@ const employeeController = {
       res.status(500).json(error)
     }
   },
-
 }
 
 const generatePassword = (password) => {

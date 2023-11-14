@@ -196,7 +196,7 @@ const leaveTypeController = {
       const {
         limit = 5,
         orderBy = 'updateDate',
-        sortBy = 'asc',
+        sortBy = -1,
         employeeId
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
@@ -206,7 +206,7 @@ const leaveTypeController = {
         employee: employeeId
       }
 
-      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("leaveType");
+      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("employee").populate("leaveType");
       const totalItems = await LeaveRequest.countDocuments(queries)
 
       res.status(200).json({
@@ -221,6 +221,125 @@ const leaveTypeController = {
     catch (error) {
       res.status(500).json(error)
 
+    }
+  },
+
+  getLeaveRequestByApprove: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'updateDate',
+        sortBy = 'asc',
+        employeeId
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+      const skip = (pageIndex - 1) * limit;
+
+      const queries = {
+        "approvalStatus": {
+          $elemMatch: {
+            "_id": employeeId
+          }
+        },
+        "status": StatusRequest.WAITING
+      }
+
+      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("employee").populate("leaveType");
+      const totalItems = await LeaveRequest.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    }
+    catch (error) {
+      res.status(500).json(error)
+
+    }
+  },
+
+  getLeaveRequestHistory: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'updateDate',
+        sortBy = 'asc',
+        employeeId
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+      const skip = (pageIndex - 1) * limit;
+
+      const queries = {
+        employee: employeeId,
+        status: StatusRequest.APPROVED
+      }
+
+      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate(
+        {
+          path: 'employee',
+          populate: [
+            {
+              path: 'department',
+              model: 'Department'
+            },
+            {
+              path: 'team',
+              model: 'Team'
+            },
+            {
+              path: 'office',
+              model: 'Office'
+            }
+          ]
+        },
+      ).populate('leaveType');;
+      const totalItems = await LeaveRequest.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    }
+    catch (error) {
+      res.status(500).json(error)
+
+    }
+  },
+  getAbsentByDate: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'updateDate',
+        sortBy = 'asc',
+        keyword,
+        date
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+      const skip = (pageIndex - 1) * limit;
+      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+      queries.date = date
+      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy });
+      const totalItems = await LeaveRequest.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    }
+    catch (error) {
+      res.status(500).json(error)
     }
   },
 
