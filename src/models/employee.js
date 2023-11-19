@@ -38,9 +38,6 @@ const employeeSchema = new mongoose.Schema({
   phone: {
     type: Number,
   },
-  citizenId: {
-    type: Number,
-  },
   status: {
     type: Number,
   },

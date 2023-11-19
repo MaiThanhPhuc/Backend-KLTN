@@ -2,15 +2,11 @@ const mongoose = require("mongoose")
 const { Counter } = require("./counters")
 
 const employeeLeaveTypeSchema = new mongoose.Schema({
-  code: {
-    type: Number,
-  },
   leaveType:
   {
     type: mongoose.Schema.Types.ObjectId,
     ref: "LeaveType"
-  }
-  ,
+  },
   total: {
     type: Number,
   },

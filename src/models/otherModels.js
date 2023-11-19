@@ -33,9 +33,6 @@ const departmentSchema = new mongoose.Schema({
   name: {
     type: String,
   },
-  shortName: {
-    type: String,
-  },
   office: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Office"
@@ -61,9 +58,6 @@ const teamSchema = new mongoose.Schema({
     type: Number,
   },
   name: {
-    type: String,
-  },
-  shortName: {
     type: String,
   },
   updateDate: {
