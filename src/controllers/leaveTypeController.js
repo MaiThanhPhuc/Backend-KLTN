@@ -296,7 +296,7 @@ const leaveTypeController = {
             }
           ]
         },
-      ).populate('leaveType');;
+      ).populate('leaveType');
       const totalItems = await LeaveRequest.countDocuments(queries)
 
       res.status(200).json({
@@ -342,6 +342,34 @@ const leaveTypeController = {
       res.status(500).json(error)
     }
   },
+
+  getLeaveRequestById: async (req, res) => {
+    try {
+      const result = await LeaveRequest.findById(req.params.id).populate(
+        {
+          path: 'employee',
+          populate: [
+            {
+              path: 'department',
+              model: 'Department'
+            },
+            {
+              path: 'team',
+              model: 'Team'
+            },
+            {
+              path: 'office',
+              model: 'Office'
+            }
+          ]
+        },
+      ).populate('leaveType').populate('approvalStatus.employee');
+      res.status(200).json(result)
+    }
+    catch (error) {
+      res.status(500).json(error)
+    }
+  }
 
 };
 

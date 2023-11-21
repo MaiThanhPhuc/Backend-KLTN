@@ -1,9 +1,7 @@
 const { Employee } = require("../models/employee")
 const generator = require('generate-password');
-const bcrypt = require('bcrypt');
 const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
 const { Team, Department } = require("../models/otherModels");
-const { populate } = require("dotenv");
 
 const Status = {
   ACTIVE: 0,
@@ -21,9 +19,6 @@ const employeeController = {
   addEmployee: async (req, res) => {
     try {
       const newEmployee = new Employee(req.body);
-      newEmployee.password = generatePassword(newEmployee.password)
-      newEmployee.fullName = `${newEmployee.firstName} ${newEmployee.lastName}`
-
       let uniqueEmail = await Employee.findOne({ email: newEmployee.email });
       if (uniqueEmail) return res.status(400).send("User already registered.");
       const savedEmployee = await newEmployee.save()
@@ -41,6 +36,15 @@ const employeeController = {
     }
   },
 
+  saveImportEmployee: async (req, res) => {
+    try {
+      const savedEmployee = await Employee.insertMany(req.body);
+      res.status(200).json(savedEmployee)
+    } catch (error) {
+      res.status(500).json(error)
+
+    }
+  },
   getAllEmployee: async (req, res) => {
     try {
       const employees = await Employee.find();
