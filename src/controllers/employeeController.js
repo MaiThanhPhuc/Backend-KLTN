@@ -1,18 +1,19 @@
 const { Employee } = require("../models/employee")
 const generator = require('generate-password');
 const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
-const { Team, Department } = require("../models/otherModels");
+const { Team, Department } = require("../models/companyModels");
 
 const Status = {
-  ACTIVE: 0,
-  DEACTIVE: 1
+  ACTIVE: 1,
+  DEACTIVE: 0
 }
 
 const EmployeeRole = {
   ADMIN: 0,
-  MANAGER: 1,
-  LEADER: 2,
-  MEMBER: 3,
+  HUMAN_RESOURCE: 1,
+  MANAGER: 2,
+  LEADER: 3,
+  MEMBER: 4,
 }
 
 const employeeController = {
@@ -56,7 +57,7 @@ const employeeController = {
 
   getEmployeeById: async (req, res) => {
     try {
-      const employee = await Employee.findById(req.params.id);
+      const employee = await Employee.findById(req.params.id).populate("team").populate("department").populate("office");
       const empLeaveType = await EmployeeLeaveType.find({ employee: req.params.id }).populate("leaveType");
       const reponse = { employeeInfo: employee, leaveType: empLeaveType }
       res.status(200).json(reponse)
@@ -110,7 +111,7 @@ const employeeController = {
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
       const role = req.query?.role;
-      const status = parseInt(req.query.status) || Status.ACTIVE;
+      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
       const officeId = req.query.officeId || "";
       const departmentId = req.query.departmentId || "";
       const teamId = req.query.teamId || "";
@@ -152,28 +153,38 @@ const employeeController = {
         orderBy = 'updateDate',
         sortBy = 'asc',
         keyword,
+        currentDate,
         dateFrom,
         dateTo
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
       const skip = (pageIndex - 1) * limit;
 
-      var start = new Date(dateFrom);
-      start.setDate(start.getUTCDate());
-      start = new Date(start.setHours(0, 0, 0, 0)).toISOString()
+      var start = new Date();
+      var end = new Date(start);
 
-      var end = new Date();
-      end.setDate(end.getUTCDate());
-      end = new Date(end.setHours(23, 59, 59, 999)).toISOString()
-
-      const queries = {
-        date: {
-          $gte: start,
-          $lte: end,
-        }
+      if (currentDate) {
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+      }
+      if (dateFrom) {
+        var start = new Date(dateFrom);
+        start.setDate(start.getUTCDate());
+        start = new Date(start.setHours(0, 0, 0, 0)).toISOString()
+      }
+      if (dateTo) {
+        var end = new Date(dateTo);
+        end.setDate(end.getUTCDate());
+        end = new Date(end.setHours(23, 59, 59, 999)).toISOString()
       }
 
-      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+      const queries = {
+        // date: {
+        //   $gte: start,
+        //   $lte: end,
+        // }
+      }
+
       const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
         .populate(
           {
@@ -211,14 +222,5 @@ const employeeController = {
   },
 }
 
-const generatePassword = (password) => {
-  password = generator.generate({
-    length: 10,
-    uppercase: true,
-    lowercase: true,
-    numbers: true,
-  });
-  return password
-}
 
 module.exports = employeeController;

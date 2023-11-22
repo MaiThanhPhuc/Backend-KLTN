@@ -2,9 +2,10 @@ const jwt = require("jsonwebtoken");
 
 const EmployeeRole = {
   ADMIN: 0,
-  MANAGER: 1,
-  LEADER: 2,
-  MEMBER: 3,
+  HUMAN_RESOURCE: 1,
+  MANAGER: 2,
+  LEADER: 3,
+  MEMBER: 4,
 }
 
 const verifyToken = (req, res, next) => {
@@ -33,7 +34,7 @@ const verifyToken = (req, res, next) => {
 
 const verifyTokenAndUserAuthorization = (req, res, next) => {
   verifyToken(req, res, () => {
-    if (req.user && (req.user.id === req.params.id || req.user.isAdmin)) {
+    if (req.user && (req.user.id === req.params.id || req.user.role == EmployeeRole.ADMIN || req.user.role == EmployeeRole.HUMAN_RESOURCE)) {
       next();
     } else {
       res.status(403).json("You're not allowed to do that!");
@@ -43,7 +44,7 @@ const verifyTokenAndUserAuthorization = (req, res, next) => {
 
 const verifyTokenAndAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
-    if (req.user.isAdmin || req.user.role == EmployeeRole.ADMIN) {
+    if (req.user.role == EmployeeRole.ADMIN || req.user.role == EmployeeRole.HUMAN_RESOURCE) {
       next();
     } else {
       res.status(403).json("You're not allowed to do that!");

@@ -63,10 +63,6 @@ const employeeSchema = new mongoose.Schema({
   updateDate: {
     type: Date,
   },
-  isAdmin: {
-    type: Boolean,
-    default: false
-  },
   team: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Team"
@@ -103,16 +99,19 @@ employeeSchema.pre('save', function (next) {
 });
 
 employeeSchema.pre('insertMany', async function (next, docs) {
-  if (Array.isArray(docs) && docs.length) {
-    const markEmployee = docs.map(async (emp) => {
-      await Counter.findOneAndUpdate({ name: 'Employee' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
-        emp.code = count.seq;
-        emp.password = generatePassword(emp.password)
-        emp.fullName = `${emp.firstName} ${emp.lastName}`
-        emp.status = Status.ACTIVE
-        console.log("...count: " + emp.code);
-      })
+  for (const emp of docs) {
+    emp.password = generatePassword(emp.password)
+    emp.status = Status.ACTIVE
+    emp.role = EmployeeRole.MEMBER
+    emp.fullName = `${emp.firstName} ${emp.lastName}`
+    await Counter.findOneAndUpdate({ name: 'Employee' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
+      console.log("...count: " + JSON.stringify(count));
+      emp.code = count.seq;
     })
+      .catch(function (error) {
+        console.error("counter error-> : " + error);
+        throw error;
+      });
   }
   next();
 });
@@ -126,9 +125,18 @@ const generatePassword = (password) => {
   });
   return password
 }
+
 const Status = {
-  ACTIVE: 0,
-  DEACTIVE: 1
+  ACTIVE: 1,
+  DEACTIVE: 0
+}
+
+const EmployeeRole = {
+  ADMIN: 0,
+  HUMAN_RESOURCE: 1,
+  MANAGER: 2,
+  LEADER: 3,
+  MEMBER: 4,
 }
 
 

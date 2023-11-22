@@ -4,7 +4,6 @@ const bcrypt = require('bcrypt')
 let refreshTokens = [];
 
 const authController = {
-
   generateAccessToken: (user) => {
     return jwt.sign(
       {
@@ -13,7 +12,7 @@ const authController = {
         role: user.role,
       },
       process.env.JWT_ACCESS_KEY,
-      { expiresIn: "30m" }
+      { expiresIn: "1d" }
     );
   },
 

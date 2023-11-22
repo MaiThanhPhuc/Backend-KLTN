@@ -1,9 +1,9 @@
 const { Employee } = require("../models/employee");
-const { Team, Department, Office } = require("../models/otherModels")
+const { Team, Department, Office } = require("../models/companyModels")
 
 const Status = {
-  ACTIVE: 0,
-  DEACTIVE: 1
+  ACTIVE: 1,
+  DEACTIVE: 0
 }
 
 const employeeController = {
@@ -67,7 +67,7 @@ const employeeController = {
         keyword
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const status = parseInt(req.query.status) || Status.ACTIVE;
+      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
       const skip = (pageIndex - 1) * limit;
 
       const queries = {
@@ -143,7 +143,7 @@ const employeeController = {
         keyword
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const status = parseInt(req.query.status) || Status.ACTIVE;
+      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
       const skip = (pageIndex - 1) * limit;
 
       const queries = {
@@ -233,7 +233,7 @@ const employeeController = {
         keyword
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const status = parseInt(req.query.status) || Status.ACTIVE;
+      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
       const skip = (pageIndex - 1) * limit;
 
       const queries = {

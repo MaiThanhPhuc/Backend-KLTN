@@ -1,10 +1,10 @@
 const { Employee } = require("../models/employee");
 const { LeaveType, EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
-const { Team, Department } = require("../models/otherModels");
+const { Team, Department } = require("../models/companyModels");
 
 const Status = {
-  ACTIVE: 0,
-  DEACTIVE: 1
+  ACTIVE: 1,
+  DEACTIVE: 0
 }
 
 const StatusRequest = {
@@ -26,6 +26,14 @@ const LeaveTimeValue = {
   MORNING_SHIFT: 0.375,
   AFTERNOON_SHIFT: 0.625,
   HALF_DAY: 0.5,
+}
+
+const EmployeeRole = {
+  ADMIN: 0,
+  HUMAN_RESOURCE: 1,
+  MANAGER: 2,
+  LEADER: 3,
+  MEMBER: 4,
 }
 
 const leaveTypeController = {
@@ -54,7 +62,7 @@ const leaveTypeController = {
         keyword
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const status = parseInt(req.query.status) || Status.ACTIVE;
+      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
       const skip = (pageIndex - 1) * limit;
 
       const queries = {
@@ -345,25 +353,7 @@ const leaveTypeController = {
 
   getLeaveRequestById: async (req, res) => {
     try {
-      const result = await LeaveRequest.findById(req.params.id).populate(
-        {
-          path: 'employee',
-          populate: [
-            {
-              path: 'department',
-              model: 'Department'
-            },
-            {
-              path: 'team',
-              model: 'Team'
-            },
-            {
-              path: 'office',
-              model: 'Office'
-            }
-          ]
-        },
-      ).populate('leaveType').populate('approvalStatus.employee');
+      const result = await LeaveRequest.findById(req.params.id).populate('employee').populate('leaveType').populate('approvalStatus.employee');
       res.status(200).json(result)
     }
     catch (error) {
@@ -393,18 +383,17 @@ const getTimeValue = (key) => {
 };
 
 const getAprrovalById = async (employeeId) => {
-  const today = new Date()
   const employee = await Employee.findById(employeeId)
   var approvalId = [];
   const team = await Team.findById(employee.team)
   const department = await Department.findById(employee.department)
-  approvalId = [department.manager, team.leader]
+  const human_resource = await Employee.findOne({ role: EmployeeRole.HUMAN_RESOURCE })
+  approvalId = [department.manager, team.leader, human_resource?._id]
 
   return approvalId.map(item => {
     return {
       employee: item,
       status: StatusRequest.WAITING,
-      updateDate: today
     }
   })
 
