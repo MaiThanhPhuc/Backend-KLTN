@@ -10,6 +10,7 @@ router.post('/', verifyTokenAndAdmin, employeeController.addEmployee)
 router.post('/importData', verifyTokenAndAdmin, employeeController.saveImportEmployee)
 router.get('/', verifyToken, employeeController.searchEmployee)
 router.put('/:id', verifyTokenAndUserAuthorization, employeeController.updateEmployeeById)
+router.put('/resetPassword/:id', verifyTokenAndUserAuthorization, employeeController.resetPassword)
 router.delete('/:id', verifyTokenAndAdmin, employeeController.deleteEmployeeById)
 
 module.exports = router;

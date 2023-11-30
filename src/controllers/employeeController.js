@@ -220,7 +220,24 @@ const employeeController = {
       res.status(500).json(error)
     }
   },
-}
+  resetPassword: async (req, res) => {
+    try {
+      await Employee.findByIdAndUpdate(req.params.id, { password: generatePassword() })
+      res.status(200).json("Success")
+    } catch (error) {
+      res.status(500).json(error)
+    }
+  }
 
+}
+const generatePassword = (password) => {
+  password = generator.generate({
+    length: 10,
+    uppercase: true,
+    lowercase: true,
+    numbers: true,
+  });
+  return password
+}
 
 module.exports = employeeController;
