@@ -16,6 +16,8 @@ router.post('/updateEmployeeLeaveType', verifyTokenAndUserAuthorization, leaveTy
 router.get('/', verifyToken, leaveTypeController.searchLeaveType)
 // router.get('/getAbsent', verifyToken, leaveTypeController.getAbsentByDate)
 router.put('/:id', verifyTokenAndUserAuthorization, leaveTypeController.updateLeaveTypeById)
+router.put('/updateLeaveRequestByApprovalId/:id', verifyToken, leaveTypeController.updateLeaveRequestByApprovalId)
+router.put('/updateLeaveRequestById/:id', verifyToken, leaveTypeController.updateLeaveRequestById)
 router.delete('/:id', verifyTokenAndUserAuthorization, leaveTypeController.deleteLeaveTypeById)
 
 module.exports = router;

@@ -70,8 +70,8 @@ const employeeController = {
 
   updateEmployeeById: async (req, res) => {
     try {
+      await Employee.findByIdAndUpdate(req.params.id, { $set: req.body })
       const employee = await Employee.findById(req.params.id);
-      await employee.updateOne({ $set: req.body })
       if (employee) {
         if (employee.role == EmployeeRole.LEADER) {
           await Team.findByIdAndUpdate(employee.team, { leader: employee._id })

@@ -12,6 +12,7 @@ const StatusRequest = {
   PENDING: 1,
   APPROVED: 2,
   WAITING: 3,
+  REJECT: 4
 }
 
 const LeaveTimeType = {
@@ -177,19 +178,32 @@ const leaveTypeController = {
       const today = new Date()
       req.body.updateDate = today;
       const result = await LeaveRequest.findByIdAndUpdate(req.params.id, req.body);
-      if (result) {
-        if (result.approvalStatus.every(item => item.status == StatusRequest.APPROVED)) {
+      res.status(200).json(result)
+    } catch (error) {
+      res.status(500).json(error)
+    }
+  },
+
+  updateLeaveRequestByApprovalId: async (req, res) => {
+    try {
+      const today = new Date()
+      req.body.updateDate = today;
+      await LeaveRequest.findByIdAndUpdate(req.params.id, req.body);
+      var checkApprove = await LeaveRequest.findById(req.params.id)
+      if (checkApprove) {
+        if (checkApprove.approvalStatus.every(item => item.status == StatusRequest.APPROVED)) {
           var employeeLeave = await EmployeeLeaveType.findOne({
             employee: req.body.employee,
             leaveType: req.body.leaveType,
           })
-
-          employeeLeave.taken = employeeLeave.taken + timeValue
-          employeeLeave.total = employeeLeave.total - timeValue
+          employeeLeave.taken = employeeLeave.taken + checkApprove.timeValue
+          // employeeLeave.total = employeeLeave.total - checkApprove.timeValue
           await EmployeeLeaveType.findByIdAndUpdate(employeeLeave._id, employeeLeave)
           await LeaveRequest.findByIdAndUpdate(req.params.id, { status: StatusRequest.APPROVED })
         }
-
+        if (checkApprove.approvalStatus.every(item => item.status == StatusRequest.REJECT)) {
+          await LeaveRequest.findByIdAndUpdate(req.params.id, { status: StatusRequest.REJECT })
+        }
       }
       res.status(200).json("Success")
     }
@@ -246,13 +260,32 @@ const leaveTypeController = {
       const queries = {
         "approvalStatus": {
           $elemMatch: {
-            "_id": employeeId
+            "employee": employeeId,
+            "status": StatusRequest.WAITING
           }
         },
-        "status": StatusRequest.WAITING
+        "status": StatusRequest.PENDING
       }
 
-      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("employee").populate("leaveType");
+      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate(
+        {
+          path: 'employee',
+          populate: [
+            {
+              path: 'department',
+              model: 'Department'
+            },
+            {
+              path: 'team',
+              model: 'Team'
+            },
+            {
+              path: 'office',
+              model: 'Office'
+            }
+          ]
+        },
+      ).populate("leaveType");
       const totalItems = await LeaveRequest.countDocuments(queries)
 
       res.status(200).json({
@@ -385,10 +418,17 @@ const getTimeValue = (key) => {
 const getAprrovalById = async (employeeId) => {
   const employee = await Employee.findById(employeeId)
   var approvalId = [];
-  const team = await Team.findById(employee.team)
-  const department = await Department.findById(employee.department)
+  var team;
+  var department;
+  if (employee.role !== EmployeeRole.LEADER) team = await Team.findById(employee.team)
+  if (employee.role !== EmployeeRole.MANAGER) department = await Department.findById(employee.department)
+
   const human_resource = await Employee.findOne({ role: EmployeeRole.HUMAN_RESOURCE })
-  approvalId = [department.manager, team.leader, human_resource?._id]
+
+  if (team?.leader) approvalId.push(team.leader)
+  if (department?.manager) approvalId.push(department.manager)
+  approvalId.push(human_resource?._id)
+
 
   return approvalId.map(item => {
     return {

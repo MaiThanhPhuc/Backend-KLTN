@@ -76,8 +76,8 @@ const employeeController = {
 
       if (keyword) queries.name = { $regex: keyword, $options: 'i' }
 
-      const result = await Team.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
-        .populate("department").populate("leader");
+      const result = await Team.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("leader")
+        .populate("department");
       const totalItems = await Team.countDocuments(queries)
 
       res.status(200).json({
