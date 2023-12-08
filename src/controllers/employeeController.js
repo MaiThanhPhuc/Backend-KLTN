@@ -179,10 +179,10 @@ const employeeController = {
       }
 
       const queries = {
-        // date: {
-        //   $gte: start,
-        //   $lte: end,
-        // }
+        date: {
+          $gte: start,
+          $lte: end,
+        }
       }
 
       const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })

@@ -6,7 +6,7 @@ const Status = {
   DEACTIVE: 0
 }
 
-const employeeController = {
+const adminController = {
   addTeam: async (req, res) => {
     try {
       const today = new Date()
@@ -315,4 +315,4 @@ const employeeController = {
   }
 }
 
-module.exports = employeeController;
+module.exports = adminController;

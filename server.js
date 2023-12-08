@@ -8,6 +8,7 @@ const employeeRoute = require("./src/routes/employee")
 const adminRoute = require("./src/routes/admin")
 const leaveTypeRoute = require("./src/routes/leaveType")
 const authRoute = require("./src/routes/auth")
+const workLogRoute = require("./src/routes/workLog")
 const app = express()
 dotenv.config({ path: __dirname + '/.env' });
 const connectingString = process.env.MONGODB_URL
@@ -30,3 +31,4 @@ app.use('/v1/api/employee', employeeRoute);
 app.use('/v1/api/admin', adminRoute);
 app.use('/v1/api/leaveType', leaveTypeRoute);
 app.use('/v1/api/auth', authRoute);
+app.use('/v1/api/workLog', workLogRoute);
