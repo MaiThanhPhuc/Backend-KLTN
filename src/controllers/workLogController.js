@@ -1,10 +1,22 @@
 const { WorkLog } = require("../models/workLog");
 
+const WorkLogStatus = {
+  INVALID: 0,
+  VALID: 1,
+  PENDING: 2,
+}
+
+const WorkLogType = {
+  WORKING: 0,
+  TRAINING: 1,
+}
+
 const workLogController = {
   addWorkLog: async (req, res) => {
     try {
       const request = new WorkLog(req.body);
       request.updateDate = new Date();
+      request.status = checkValidStatus(req.body);
       const saveValue = await request.save();
       res.status(200).json(saveValue)
     } catch (error) {
@@ -107,16 +119,22 @@ const workLogController = {
           }
         }]);
 
-      res.status(200).json({
-        msg: "Success",
-        result,
-      })
+      res.status(200).json(result)
     }
     catch (error) {
       res.status(500).json(error)
 
     }
   },
+}
+
+checkValidStatus = (body) => {
+  const date = new Date(body.date);
+  if (date.getDay() >= 1 && date.getDay() <= 5 && (body.time >= 0 || body.time <= 8)) { // Monday is 1 and Friday is 5
+    return WorkLogStatus.VALID;
+  } else {
+    return WorkLogStatus.INVALID;
+  }
 }
 
 module.exports = workLogController;
