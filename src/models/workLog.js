@@ -6,6 +6,14 @@ const workLogSchema = new mongoose.Schema({
     type: Date
   },
   time: {
+    type: Number,
+    default: 0
+  },
+  otTime: {
+    type: Number,
+    default: 0
+  },
+  otRate: {
     type: Number
   },
   description: {

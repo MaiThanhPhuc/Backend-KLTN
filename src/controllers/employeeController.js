@@ -2,6 +2,7 @@ const { Employee } = require("../models/employee")
 const generator = require('generate-password');
 const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
 const { Team, Department } = require("../models/companyModels");
+const { WorkLog } = require("../models/workLog");
 
 const Status = {
   ACTIVE: 1,
@@ -227,6 +228,25 @@ const employeeController = {
     } catch (error) {
       res.status(500).json(error)
     }
+  },
+
+  getSalaryByMonth: async (req, res) => {
+    try {
+      const employee = await Employee.findById(req.params.id);
+      const workingDay = await getWorkingTimeByEmployee(req.params.id);
+
+      const salary = await calcSalaryByMonth(employee.salary, workingDay.workingTime, workingDay.otTime);
+
+      res.status(200).json({
+        msg: "Success",
+        result: {
+          salary: salary,
+          workingDay: workingDay,
+        },
+      })
+    } catch (error) {
+      res.status(500).json(error)
+    }
   }
 
 }
@@ -238,6 +258,58 @@ const generatePassword = (password) => {
     numbers: true,
   });
   return password
+}
+
+const getWorkingTimeByEmployee = async (employeeId) => {
+  const month = new Date().getMonth() + 1;
+  const year = new Date().getFullYear(); // Change this to the desired year
+
+  const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const endOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0));
+
+  endOfMonth.setMilliseconds(endOfMonth.getMilliseconds() - 1);
+
+  const result = await WorkLog.find(
+    {
+      "employee": employeeId,
+      date: {
+        $gte: startOfMonth,
+        $lt: endOfMonth
+      }
+    }
+  );
+
+  var workingTime = 0;
+  var otTime = 0;
+  if (result) {
+    workingTime = result.filter(x => x.status == 1).reduce((a, b) => a + b.time, 0);
+    otTime = result.filter(x => x.status == 1).reduce((a, b) => a + (b.otTime * b.otRate), 0);
+  }
+
+  return { workingTime, otTime };
+}
+
+const calcSalaryByMonth = async (baseSalary, workingDate, overTime) => {
+  let salary = 0;
+  const workingDayOfMonth = countWorkingDayByMonth();
+  const unitSalary = baseSalary / workingDayOfMonth;
+  salary = unitSalary * workingDate;
+
+  if (overTime) {
+    const OTSalary = overTime * unitSalary;
+    salary += OTSalary;
+  }
+
+  return salary;
+}
+
+const countWorkingDayByMonth = () => {
+  const year = new Date().getFullYear()
+  const month = new Date().getMonth() + 1;
+  let count = 0;
+  for (let day = 1; day <= new Date(year, month, 0).getDate(); day++)
+    count += new Date(year, month - 1, day).getDay() >= 1 && new Date(year, month - 1, day).getDay() <= 5;
+  return count;
 }
 
 module.exports = employeeController;

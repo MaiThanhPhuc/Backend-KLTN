@@ -34,7 +34,7 @@ const verifyToken = (req, res, next) => {
 
 const verifyTokenAndUserAuthorization = (req, res, next) => {
   verifyToken(req, res, () => {
-    if (req.user && (req.user.id === req.params.id || req.user.role == EmployeeRole.ADMIN || req.user.role == EmployeeRole.HUMAN_RESOURCE)) {
+    if (req.user && (req.user.id === req.body.employee || req.user.role == EmployeeRole.ADMIN || req.user.role == EmployeeRole.HUMAN_RESOURCE)) {
       next();
     } else {
       res.status(403).json("You're not allowed to do that!");

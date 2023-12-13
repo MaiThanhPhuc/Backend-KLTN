@@ -60,6 +60,10 @@ const employeeSchema = new mongoose.Schema({
   age: {
     type: Number,
   },
+  salary: {
+    type: Number,
+    default: 0
+  },
   updateDate: {
     type: Date,
   },

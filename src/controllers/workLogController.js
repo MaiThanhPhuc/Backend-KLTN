@@ -1,4 +1,5 @@
 const { WorkLog } = require("../models/workLog");
+var mongoose = require('mongoose');
 
 const WorkLogStatus = {
   INVALID: 0,
@@ -109,15 +110,15 @@ const workLogController = {
 
       endOfMonth.setMilliseconds(endOfMonth.getMilliseconds() - 1);
 
-      const result = await WorkLog.aggregate([
+      const result = await WorkLog.find(
         {
-          $match: {
-            date: {
-              $gte: startOfMonth,
-              $lt: endOfMonth
-            }
+          "employee": req.query.userId,
+          date: {
+            $gte: startOfMonth,
+            $lt: endOfMonth
           }
-        }]);
+        }
+      );
 
       res.status(200).json(result)
     }
