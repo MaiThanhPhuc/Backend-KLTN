@@ -61,17 +61,28 @@ const workLogController = {
     try {
       const {
         limit = 5,
-        orderBy = 'code',
-        sortBy = 'asc',
-        keyword
+        orderBy = 'date',
+        sortBy = 'desc',
+        employeeId
       } = req.query
       const pageIndex = parseInt(req.query.pageIndex) || 1;
       const skip = (pageIndex - 1) * limit;
 
       const queries = {
+        employee: employeeId
       }
 
-      const result = await WorkLog.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("employee");
+      const result = await WorkLog.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate(
+        {
+          path: 'employee',
+          populate: [
+            {
+              path: 'team',
+              model: 'Team'
+            },
+          ]
+        },
+      );
       const totalItems = await WorkLog.countDocuments(queries)
 
       res.status(200).json({
@@ -109,7 +120,6 @@ const workLogController = {
       const endOfMonth = new Date(Date.UTC(year, desiredMonth, 1, 0, 0, 0));
 
       endOfMonth.setMilliseconds(endOfMonth.getMilliseconds() - 1);
-
       const result = await WorkLog.find(
         {
           "employee": req.query.userId,

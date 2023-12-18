@@ -233,13 +233,14 @@ const employeeController = {
   getSalaryByMonth: async (req, res) => {
     try {
       const employee = await Employee.findById(req.params.id);
-      const workingDay = await getWorkingTimeByEmployee(req.params.id);
+      const workingDay = await getWorkingTimeByEmployee(req.params.id, req.params.month);
 
       const salary = await calcSalaryByMonth(employee.salary, workingDay.workingTime, workingDay.otTime);
 
       res.status(200).json({
         msg: "Success",
         result: {
+          baseSalary: employee.salary,
           salary: salary,
           workingDay: workingDay,
         },
@@ -260,8 +261,8 @@ const generatePassword = (password) => {
   return password
 }
 
-const getWorkingTimeByEmployee = async (employeeId) => {
-  const month = new Date().getMonth() + 1;
+const getWorkingTimeByEmployee = async (employeeId, month) => {
+  // const month = new Date().getMonth() + 1;
   const year = new Date().getFullYear(); // Change this to the desired year
 
   const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
@@ -292,7 +293,7 @@ const getWorkingTimeByEmployee = async (employeeId) => {
 const calcSalaryByMonth = async (baseSalary, workingDate, overTime) => {
   let salary = 0;
   const workingDayOfMonth = countWorkingDayByMonth();
-  const unitSalary = baseSalary / workingDayOfMonth;
+  const unitSalary = baseSalary / (workingDayOfMonth * 8);
   salary = unitSalary * workingDate;
 
   if (overTime) {
