@@ -7,6 +7,6 @@ router.get('/getWorkLogByMonth', verifyToken, workLogController.getWorkLogByMont
 router.get('/getWorkLogById/:id', verifyTokenAndAdmin, workLogController.getWorkLogById)
 router.post('/addWorkLog', verifyTokenAndUserAuthorization, workLogController.addWorkLog)
 router.put('/updateWorkLogById/:id', verifyTokenAndAdmin, workLogController.updateWorkLogById)
-router.get('/searchWorkLog', verifyToken, workLogController.searchWorkLog)
+router.get('/getWorkLogByEmployeeId', verifyToken, workLogController.getDetailWorkLogByEmployeeId)
 
 module.exports = router;

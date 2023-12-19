@@ -57,7 +57,7 @@ const workLogController = {
     }
   },
 
-  searchWorkLog: async (req, res) => {
+  getDetailWorkLogByEmployeeId: async (req, res) => {
     try {
       const {
         limit = 5,
@@ -97,6 +97,75 @@ const workLogController = {
     catch (error) {
       res.status(500).json(error)
 
+    }
+  },
+
+  searchWorkLog: async (req, res) => {
+    try {
+      const {
+        limit = 5,
+        orderBy = 'date',
+        sortBy = 'desc',
+        employeeId
+      } = req.query
+      const pageIndex = parseInt(req.query.pageIndex) || 1;
+      const skip = (pageIndex - 1) * limit;
+
+      const result = await WorkLog.aggregate([
+        {
+          $group: {
+            _id: "$employee",
+            totalWorkingTime: { $sum: "$time" },
+            otTime: { $sum: "$otTime" },
+          }
+        },
+        {
+          $lookup: {
+            from: "employees",
+            localField: "_id",
+            foreignField: "_id",
+            as: "employee",
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            totalWorkingTime: 1,
+            otTime: 1,
+            employee: {
+              $filter: {
+                input: "$employee",
+                cond: {
+                  $eq: ["$$employee.team", mongoose.Types.ObjectId(teamId)]
+                }
+              }
+            },
+          }
+        },
+        {
+          $sort: {
+            [orderBy]: sortBy
+          }
+        },
+        {
+          $skip: skip
+        },
+        {
+          $limit: limit
+        }
+      ])
+      const totalItems = await WorkLog.countDocuments(queries)
+
+      res.status(200).json({
+        msg: "Success",
+        result,
+        totalItems,
+        toltalPage: Math.ceil(totalItems / limit),
+        limit: +limit,
+        currentPage: pageIndex
+      })
+    } catch (error) {
+      res.status(500).json(error)
     }
   },
 

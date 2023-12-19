@@ -1,4 +1,4 @@
-const { Employee } = require("../models/employee")
+const { Employee, EmployeeSalary } = require("../models/employee")
 const generator = require('generate-password');
 const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
 const { Team, Department } = require("../models/companyModels");
@@ -91,7 +91,7 @@ const employeeController = {
 
   deleteEmployeeById: async (req, res) => {
     try {
-      const employee = await Employee.findByIdAndDelete(req.param.id);
+      const employee = await Employee.findByIdAndDelete(req.params.id);
 
       await employee.updateOne({ $set: req.body })
       res.status(200).json("Success")
@@ -230,12 +230,32 @@ const employeeController = {
     }
   },
 
-  getSalaryByMonth: async (req, res) => {
+  calcSalaryEmployeeByMonth: async (req, res) => {
     try {
       const employee = await Employee.findById(req.params.id);
-      const workingDay = await getWorkingTimeByEmployee(req.params.id, req.params.month);
+      const workingDay = await getWorkingTimeByEmployee(req.params.id, req.body.month);
+      const year = new Date().getFullYear();
 
-      const salary = await calcSalaryByMonth(employee.salary, workingDay.workingTime, workingDay.otTime);
+      let salary = await calcSalaryByMonth(employee.salary, workingDay.workingTime, workingDay.otTime);
+      salary += req.body.transportAllowance + req.body.mealAllowance;
+      EmployeeSalary.findOneAndDelete({ employee: req.params.id, month: req.body.month, year: year })
+
+
+      const createEmployeeSalary = await EmployeeSalary.create({
+        employee: req.params.id,
+        month: req.body.month,
+        year: year,
+        contractSalary: employee.salary,
+        workingDay: workingDay.workingTime / 8,
+        otDay: workingDay.otTime / 8,
+        transportAllowance: req.body.transportAllowance,
+        mealAllowance: req.body.mealAllowance,
+        paidSalary: salary,
+        updateDate: new Date(),
+        status: 1
+      })
+
+      Employee.findByIdAndUpdate(req.params.id, { employeeSalary: createEmployeeSalary })
 
       res.status(200).json({
         msg: "Success",

@@ -82,9 +82,53 @@ const employeeSchema = new mongoose.Schema({
   leaveType: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "EmployeeLeaveType"
+  }],
+  employeeSalary: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "EmployeeSalary"
   }]
 })
 
+const employeeSalarySchema = new mongoose.Schema({
+  employee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee"
+  },
+  contractSalary: {
+    type: Number,
+    default: 0
+  },
+  paidSalary: {
+    type: Number,
+    default: 0
+  },
+  transportAllowance: {
+    type: Number,
+    default: 0
+  },
+  mealAllowance: {
+    type: Number,
+    default: 0
+  },
+  workingDay: {
+    type: Number
+  },
+  otDay: {
+    type: Number
+  },
+  month: {
+    type: Number
+  },
+  year: {
+    type: Number
+  },
+  updateDate: {
+    type: Date
+  },
+  status: {
+    type: Number
+  }
+})
 
 employeeSchema.pre('save', function (next) {
   var emp = this;
@@ -145,6 +189,6 @@ const EmployeeRole = {
 
 
 var Employee = mongoose.model("Employee", employeeSchema)
+var EmployeeSalary = mongoose.model("EmployeeSalary", employeeSalarySchema)
 
-
-module.exports = { Employee }
+module.exports = { Employee, EmployeeSalary }
