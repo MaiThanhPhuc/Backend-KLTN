@@ -23,7 +23,7 @@ const employeeController = {
       const newEmployee = new Employee(req.body);
       let uniqueEmail = await Employee.findOne({ email: newEmployee.email });
       if (uniqueEmail) return res.status(400).send("User already registered.");
-      const dEmployee = await newEmployee.save()
+      const savedEmployee = await newEmployee.save()
       if (savedEmployee) {
         if (savedEmployee.role == EmployeeRole.LEADER) {
           await Team.findByIdAndUpdate(savedEmployee.team, { leader: savedEmployee._id })
@@ -132,7 +132,8 @@ const employeeController = {
       const skip = (pageIndex - 1) * limit;
 
       const queries = {
-        status: status
+        status: status,
+        isAdmin: false || undefined
       }
 
       if (keyword) queries.fullName = { $regex: keyword, $options: 'i' }
