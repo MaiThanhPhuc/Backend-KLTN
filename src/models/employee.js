@@ -102,6 +102,18 @@ const employeeSalarySchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  paidDay: {
+    type: Number,
+    default: 0
+  },
+  taxIncomeRate: {
+    type: Number,
+    default: 0
+  },
+  taxValue: {
+    type: Number,
+    default: 0
+  },
   transportAllowance: {
     type: Number,
     default: 0
@@ -111,10 +123,16 @@ const employeeSalarySchema = new mongoose.Schema({
     default: 0
   },
   workingDay: {
-    type: Number
+    type: Number,
+    default: 0
   },
   otDay: {
-    type: Number
+    type: Number,
+    default: 0
+  },
+  workingDayOfMonth: {
+    type: Number,
+    default: 0
   },
   month: {
     type: Number

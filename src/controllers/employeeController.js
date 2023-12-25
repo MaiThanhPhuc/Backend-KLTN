@@ -3,7 +3,7 @@ const generator = require('generate-password');
 const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
 const { Team, Department } = require("../models/companyModels");
 const { WorkLog } = require("../models/workLog");
-
+const common = require("../utils/common")
 const Status = {
   ACTIVE: 1,
   DEACTIVE: 0
@@ -23,7 +23,7 @@ const employeeController = {
       const newEmployee = new Employee(req.body);
       let uniqueEmail = await Employee.findOne({ email: newEmployee.email });
       if (uniqueEmail) return res.status(400).send("User already registered.");
-      const savedEmployee = await newEmployee.save()
+      const dEmployee = await newEmployee.save()
       if (savedEmployee) {
         if (savedEmployee.role == EmployeeRole.LEADER) {
           await Team.findByIdAndUpdate(savedEmployee.team, { leader: savedEmployee._id })
@@ -66,6 +66,18 @@ const employeeController = {
     catch (error) {
       res.status(500).json(error)
 
+    }
+  },
+
+  getEmployeeSalaryById: async (req, res) => {
+    try {
+      const employee = await Employee.findById(req.params.id).populate("team").populate("department").populate("office");
+      const employeeSalary = await EmployeeSalary.findOne({ employee: req.params.id, month: new Date().getMonth() + 1, year: new Date().getFullYear() });
+      const reponse = { employeeInfo: employee, employeeSalary: employeeSalary }
+      res.status(200).json(reponse)
+    }
+    catch (error) {
+      res.status(500).json(error)
     }
   },
 
@@ -232,37 +244,29 @@ const employeeController = {
 
   calcSalaryEmployeeByMonth: async (req, res) => {
     try {
-      const employee = await Employee.findById(req.params.id);
-      const workingDay = await getWorkingTimeByEmployee(req.params.id, req.body.month);
-      const year = new Date().getFullYear();
 
-      let salary = await calcSalaryByMonth(employee.salary, workingDay.workingTime, workingDay.otTime);
-      salary += req.body.transportAllowance + req.body.mealAllowance;
-      EmployeeSalary.findOneAndDelete({ employee: req.params.id, month: req.body.month, year: year })
+      const employeeSalary = new EmployeeSalary(req.body);
+      const workingDay = await getWorkingTimeByEmployee(employeeSalary.employee, employeeSalary.month);
 
+      let salary = await calcSalaryByMonth(employeeSalary.contractSalary, employeeSalary.paidDay, workingDay.otTime);
+      salary += parseFloat(employeeSalary.transportAllowance) + parseFloat(employeeSalary.mealAllowance);
 
-      const createEmployeeSalary = await EmployeeSalary.create({
-        employee: req.params.id,
-        month: req.body.month,
-        year: year,
-        contractSalary: employee.salary,
-        workingDay: workingDay.workingTime / 8,
-        otDay: workingDay.otTime / 8,
-        transportAllowance: req.body.transportAllowance,
-        mealAllowance: req.body.mealAllowance,
-        paidSalary: salary,
-        updateDate: new Date(),
-        status: 1
-      })
-
-      Employee.findByIdAndUpdate(req.params.id, { employeeSalary: createEmployeeSalary })
+      await EmployeeSalary.findByIdAndUpdate(employeeSalary.id,
+        {
+          status: 1,
+          paidSalary: salary,
+          workingDay: workingDay.workingTime / 8,
+          updateDate: new Date(),
+          transportAllowance: employeeSalary.transportAllowance,
+          mealAllowance: employeeSalary.mealAllowance,
+          paidDay: employeeSalary.paidDay
+        })
 
       res.status(200).json({
         msg: "Success",
         result: {
-          baseSalary: employee.salary,
-          salary: salary,
-          workingDay: workingDay,
+          paidSalary: salary,
+          workingDay: workingDay.workingTime,
         },
       })
     } catch (error) {
@@ -313,7 +317,7 @@ const getWorkingTimeByEmployee = async (employeeId, month) => {
 const calcSalaryByMonth = async (baseSalary, workingDate, overTime) => {
   let salary = 0;
   const workingDayOfMonth = countWorkingDayByMonth();
-  const unitSalary = baseSalary / (workingDayOfMonth * 8);
+  const unitSalary = baseSalary / workingDayOfMonth;
   salary = unitSalary * workingDate;
 
   if (overTime) {
@@ -324,7 +328,7 @@ const calcSalaryByMonth = async (baseSalary, workingDate, overTime) => {
   return salary;
 }
 
-const countWorkingDayByMonth = () => {
+countWorkingDayByMonth = () => {
   const year = new Date().getFullYear()
   const month = new Date().getMonth() + 1;
   let count = 0;
