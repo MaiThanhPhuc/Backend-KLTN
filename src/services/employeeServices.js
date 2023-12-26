@@ -246,6 +246,7 @@ const employeeController = {
 
       const employeeSalary = new EmployeeSalary(req.body);
       const workingDay = await getWorkingTimeByEmployee(employeeSalary.employee, employeeSalary.month);
+
       let salary = await calcSalaryByMonth(employeeSalary.contractSalary, employeeSalary.paidDay, workingDay.otTime);
       salary += parseFloat(employeeSalary.transportAllowance) + parseFloat(employeeSalary.mealAllowance);
 

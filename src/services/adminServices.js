@@ -6,29 +6,18 @@ const Status = {
   DEACTIVE: 0
 }
 
-const adminController = {
-  addTeam: async (req, res) => {
-    try {
-      const today = new Date()
-      const request = new Team(req.body);
-      request.updateDate = today;
-      request.status = Status.ACTIVE;
-      let checkValid = await Team.findOne({ name: request.name });
-      if (checkValid) return res.status(400).send("Name already registered.");
-      const saveValue = await request.save();
-      res.status(200).json(saveValue)
-    } catch (error) {
-      res.status(500).json(error);
-    }
+const adminServices = {
+  addTeam: async (req) => {
+    const today = new Date()
+    const request = new Team(req.body);
+    request.updateDate = today;
+    request.status = Status.ACTIVE;
+    const saveValue = await request.save();
+    return saveValue
   },
 
-  getAllTeam: async (req, res) => {
-    try {
-      const teams = await Team.find().populate("department").populate("leader");
-      res.status(200).json(teams)
-    } catch (error) {
-      res.status(500).json(error)
-    }
+  getAllTeam: async () => {
+    return await Team.find().populate("department").populate("leader");
   },
 
   getTeamById: async (req, res) => {
@@ -315,4 +304,4 @@ const adminController = {
   }
 }
 
-module.exports = adminController;
+module.exports = adminServices;
