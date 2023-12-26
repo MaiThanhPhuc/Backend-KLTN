@@ -194,11 +194,32 @@ const workLogController = {
           $unwind: '$empSalary'
         },
         {
+          $lookup: {
+            from: "teams",
+            localField: "employeeInfo.team",
+            foreignField: "_id",
+            as: "team",
+          }
+        },
+        {
+          $unwind: '$team'
+        },
+        {
+          $addFields: {
+            'teamName': '$team.name'
+          }
+        },
+        {
           $match: {
             'empSalary.month': parseInt(desiredMonth),
             'empSalary.year': parseInt(year),
           }
         },
+        {
+          $project: {
+            'team': 0
+          }
+        }
       ]
 
       if (teamId) {

@@ -90,10 +90,6 @@ const employeeSchema = new mongoose.Schema({
 })
 
 const employeeSalarySchema = new mongoose.Schema({
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Employee"
-  },
   contractSalary: {
     type: Number,
     default: 0
@@ -145,6 +141,10 @@ const employeeSalarySchema = new mongoose.Schema({
   },
   status: {
     type: Number
+  },
+  employee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee"
   }
 })
 
