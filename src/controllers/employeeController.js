@@ -3,6 +3,8 @@ const generator = require('generate-password');
 const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
 const { Team, Department } = require("../models/companyModels");
 const { WorkLog } = require("../models/workLog");
+const nodemailer = require('nodemailer');
+
 const Status = {
   ACTIVE: 1,
   DEACTIVE: 0
@@ -334,5 +336,26 @@ const countWorkingDayByMonth = () => {
     count += new Date(year, month - 1, day).getDay() >= 1 && new Date(year, month - 1, day).getDay() <= 5;
   return count;
 }
+
+// eslint-disable-next-line no-unused-vars
+const sendMail = async (mailOptions) => {
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD
+    }
+  });
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+
+}
+
 
 module.exports = employeeController;

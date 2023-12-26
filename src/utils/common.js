@@ -1,6 +1,6 @@
 var generator = require('generate-password');
 
-generatePassword = () => {
+const generatePassword = () => {
   return generator.generate({
     length: 10,
     uppercase: true,
@@ -9,7 +9,7 @@ generatePassword = () => {
   });
 };
 
-countWorkingDayByMonth = () => {
+const countWorkingDayByMonth = () => {
   const year = new Date().getFullYear()
   const month = new Date().getMonth() + 1;
   let count = 0;
