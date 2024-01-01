@@ -1,15 +1,15 @@
 var generator = require('generate-password');
 
-const generatePassword = () => {
+const generatePassword = async () => {
   return generator.generate({
     length: 10,
     uppercase: true,
     lowercase: true,
     numbers: true,
   });
-};
+}
 
-const countWorkingDayByMonth = () => {
+const countWorkingDayByMonth = async () => {
   const year = new Date().getFullYear()
   const month = new Date().getMonth() + 1;
   let count = 0;
@@ -18,4 +18,4 @@ const countWorkingDayByMonth = () => {
   return count;
 }
 
-module.export = { generatePassword, countWorkingDayByMonth };
+module.exports = { generatePassword, countWorkingDayByMonth };

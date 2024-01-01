@@ -1,53 +1,17 @@
-const { Employee } = require("../models/employee");
-const { LeaveType, EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
-const { Team, Department } = require("../models/companyModels");
-
-const Status = {
-  ACTIVE: 1,
-  DEACTIVE: 0
-}
-
-const StatusRequest = {
-  CANCELLED: 0,
-  PENDING: 1,
-  APPROVED: 2,
-  WAITING: 3,
-  REJECT: 4
-}
-
-const LeaveTimeType = {
-  ALL_DAY: 0,
-  MORNING_SHIFT: 1,
-  AFTERNOON_SHIFT: 2,
-  HALF_DAY: 3,
-}
-
-const LeaveTimeValue = {
-  ALL_DAY: 1,
-  MORNING_SHIFT: 0.375,
-  AFTERNOON_SHIFT: 0.625,
-  HALF_DAY: 0.5,
-}
-
-const EmployeeRole = {
-  ADMIN: 0,
-  HUMAN_RESOURCE: 1,
-  MANAGER: 2,
-  LEADER: 3,
-  MEMBER: 4,
-}
+/* eslint-disable no-unused-vars */
+const { LeaveType } = require("../models/leaveType");
+const employeeServices = require("../services/employeeServices");
+const leaveTypeServices = require("../services/leaveTypeServices");
 
 const leaveTypeController = {
   /// Leave Type
   addLeaveType: async (req, res) => {
     try {
-      const today = new Date()
-      const request = new LeaveType(req.body);
-      let checkValid = await LeaveType.findOne({ name: request.name });
+
+      let checkValid = await LeaveType.findOne({ name: req.body.name });
       if (checkValid) return res.status(400).send("Name already registered.");
-      request.updateDate = today
-      request.status = Status.ACTIVE;
-      const saveValue = await request.save();
+
+      const saveValue = await leaveTypeServices.addLeaveType(req)
       res.status(200).json(saveValue)
     } catch (error) {
       res.status(500).json(error);
@@ -56,33 +20,8 @@ const leaveTypeController = {
 
   searchLeaveType: async (req, res) => {
     try {
-      const {
-        limit = 5,
-        orderBy = 'code',
-        sortBy = 'asc',
-        keyword
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
-      const skip = (pageIndex - 1) * limit;
-
-      const queries = {
-        status: status
-      }
-
-      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
-
-      const result = await LeaveType.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy });
-      const totalItems = await LeaveType.countDocuments(queries)
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+      const result = await leaveTypeServices.searchLeaveType(req)
+      res.status(200).json(result)
     }
     catch (error) {
       res.status(500).json(error)
@@ -92,7 +31,7 @@ const leaveTypeController = {
 
   getAllLeaveType: async (req, res) => {
     try {
-      const data = await LeaveType.find();
+      const data = await leaveTypeServices.getAllLeaveType(req)
       res.status(200).json(data)
     } catch (error) {
       res.status(500).json(error)
@@ -101,7 +40,7 @@ const leaveTypeController = {
 
   getLeaveTypeByEmployeeId: async (req, res) => {
     try {
-      const data = await EmployeeLeaveType.find({ employee: req.params.id }).populate("leaveType");
+      const data = await leaveTypeServices.getLeaveTypeByEmployeeId(req)
       res.status(200).json(data)
     } catch (error) {
       res.status(500).json(error)
@@ -110,7 +49,7 @@ const leaveTypeController = {
 
   getLeaveTypeById: async (req, res) => {
     try {
-      const result = await LeaveType.findById(req.param.id);
+      const result = await leaveTypeServices.getLeaveTypeById(req)
       res.status(200).json(result)
     }
     catch (error) {
@@ -121,9 +60,7 @@ const leaveTypeController = {
 
   updateLeaveTypeById: async (req, res) => {
     try {
-      const today = new Date()
-      req.body.updateDate = today;
-      await LeaveType.findByIdAndUpdate(req.params.id, req.body);
+      await leaveTypeServices.updateLeaveTypeById(req)
       res.status(200).json("Success")
     }
     catch (error) {
@@ -134,11 +71,8 @@ const leaveTypeController = {
 
   deleteLeaveTypeById: async (req, res) => {
     try {
-      const today = new Date()
-      req.body.updateDate = today;
-      const result = await LeaveType.findByIdAndDelete(req.param.id);
 
-      await result.updateOne({ $set: req.body })
+      await leaveTypeServices.deleteLeaveTypeById(req)
       res.status(200).json("Success")
     }
     catch (error) {
@@ -149,7 +83,7 @@ const leaveTypeController = {
 
   addEmployeeLeaveType: async (req, res) => {
     try {
-      await EmployeeLeaveType.create(req.body);
+      await leaveTypeServices.addEmployeeLeaveType(req)
       res.status(200).json("Success")
     } catch (error) {
       res.status(500).json(error)
@@ -158,7 +92,7 @@ const leaveTypeController = {
 
   updateEmployeeLeaveTypeById: async (req, res) => {
     try {
-      await EmployeeLeaveType.findByIdAndUpdate(req.body._id, req.body)
+      await employeeServices.updateEmployeeById(req)
       res.status(200).json("Success")
     } catch (error) {
       res.status(500).json(error)
@@ -167,23 +101,7 @@ const leaveTypeController = {
 
   createLeaveRequest: async (req, res) => {
     try {
-      const today = new Date()
-      const request = new LeaveRequest(req.body);
-      request.status = StatusRequest.PENDING;
-      request.updateDate = today;
-      const timeValue = getTimeValue(req.body.timeType)
-      request.timeValue = timeValue;
-      var approval = await getAprrovalById(req.body.employee)
-      request.approvalStatus = approval
-      const result = await request.save();
-
-      const employeeLeave = await EmployeeLeaveType.findOne({
-        employee: req.body.employee,
-        leaveType: req.body.leaveType,
-      })
-      const taken = employeeLeave.taken + timeValue;
-      await EmployeeLeaveType.findByIdAndUpdate(employeeLeave._id, { taken: taken, updateDate: today });
-
+      const result = await leaveTypeServices.createLeaveRequest(req)
       res.status(200).json(result)
     } catch (error) {
       res.status(500).json(error)
@@ -192,17 +110,8 @@ const leaveTypeController = {
 
   updateLeaveRequestById: async (req, res) => {
     try {
-      const today = new Date()
-      const leaveRequest = new LeaveRequest(req.body);
-      const employeeLeave = await EmployeeLeaveType.findOne({
-        employee: leaveRequest.employee,
-        leaveType: leaveRequest.leaveType,
-      })
-      if (!employeeLeave) return res.status(500).json("Error")
-      const taken = employeeLeave.taken - leaveRequest.timeValue;
 
-      await EmployeeLeaveType.findByIdAndUpdate(employeeLeave._id, { taken: taken, updateDate: today });
-      const result = await LeaveRequest.findByIdAndUpdate(req.params.id, { status: StatusRequest.CANCELLED });
+      const result = await leaveTypeServices.updateLeaveRequestById(req)
       res.status(200).json(result)
     } catch (error) {
       res.status(500).json(error)
@@ -211,18 +120,7 @@ const leaveTypeController = {
 
   updateLeaveRequestByApprovalId: async (req, res) => {
     try {
-      const today = new Date()
-      req.body.updateDate = today;
-      await LeaveRequest.findByIdAndUpdate(req.params.id, req.body);
-      var checkApprove = await LeaveRequest.findById(req.params.id)
-      if (checkApprove) {
-        if (checkApprove.approvalStatus.every(item => item.status == StatusRequest.APPROVED)) {
-          await LeaveRequest.findByIdAndUpdate(req.params.id, { status: StatusRequest.APPROVED })
-        }
-        if (checkApprove.approvalStatus.every(item => item.status == StatusRequest.REJECT)) {
-          await LeaveRequest.findByIdAndUpdate(req.params.id, { status: StatusRequest.REJECT })
-        }
-      }
+      await leaveTypeServices.updateLeaveRequestByApprovalId(req)
       res.status(200).json("Success")
     }
     catch (error) {
@@ -233,30 +131,8 @@ const leaveTypeController = {
 
   getLeaveRequest: async (req, res) => {
     try {
-      const {
-        limit = 5,
-        orderBy = 'updateDate',
-        sortBy = -1,
-        employeeId
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const skip = (pageIndex - 1) * limit;
-
-      const queries = {
-        employee: employeeId
-      }
-
-      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("employee").populate("leaveType");
-      const totalItems = await LeaveRequest.countDocuments(queries)
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+      const result = await leaveTypeServices.getLeaveRequest(req)
+      res.status(200).json(result)
     }
     catch (error) {
       res.status(500).json(error)
@@ -266,54 +142,9 @@ const leaveTypeController = {
 
   getLeaveRequestByApprove: async (req, res) => {
     try {
-      const {
-        limit = 5,
-        orderBy = 'updateDate',
-        sortBy = 'asc',
-        employeeId
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const skip = (pageIndex - 1) * limit;
+      const result = await leaveTypeServices.getLeaveRequestByApprove(req)
 
-      const queries = {
-        "approvalStatus": {
-          $elemMatch: {
-            "employee": employeeId,
-            "status": StatusRequest.WAITING
-          }
-        },
-        "status": StatusRequest.PENDING
-      }
-
-      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate(
-        {
-          path: 'employee',
-          populate: [
-            {
-              path: 'department',
-              model: 'Department'
-            },
-            {
-              path: 'team',
-              model: 'Team'
-            },
-            {
-              path: 'office',
-              model: 'Office'
-            }
-          ]
-        },
-      ).populate("leaveType");
-      const totalItems = await LeaveRequest.countDocuments(queries)
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+      res.status(200).json(result)
     }
     catch (error) {
       res.status(500).json(error)
@@ -323,49 +154,8 @@ const leaveTypeController = {
 
   getLeaveRequestHistory: async (req, res) => {
     try {
-      const {
-        limit = 5,
-        orderBy = 'updateDate',
-        sortBy = 'asc',
-        employeeId
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const skip = (pageIndex - 1) * limit;
-
-      const queries = {
-        employee: employeeId,
-        status: StatusRequest.APPROVED
-      }
-
-      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate(
-        {
-          path: 'employee',
-          populate: [
-            {
-              path: 'department',
-              model: 'Department'
-            },
-            {
-              path: 'team',
-              model: 'Team'
-            },
-            {
-              path: 'office',
-              model: 'Office'
-            }
-          ]
-        },
-      ).populate('leaveType');
-      const totalItems = await LeaveRequest.countDocuments(queries)
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+      const result = await leaveTypeServices.getLeaveRequestHistory(req)
+      res.status(200).json(result)
     }
     catch (error) {
       res.status(500).json(error)
@@ -374,29 +164,9 @@ const leaveTypeController = {
   },
   getAbsentByDate: async (req, res) => {
     try {
-      const {
-        limit = 5,
-        orderBy = 'updateDate',
-        sortBy = 'asc',
-        keyword,
-        date
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const skip = (pageIndex - 1) * limit;
-      const queries = {};
-      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
-      queries.date = date
-      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy });
-      const totalItems = await LeaveRequest.countDocuments(queries)
+      const result = await leaveTypeServices.getAbsentByDate(req)
 
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+      res.status(200).json(result)
     }
     catch (error) {
       res.status(500).json(error)
@@ -405,7 +175,7 @@ const leaveTypeController = {
 
   getLeaveRequestById: async (req, res) => {
     try {
-      const result = await LeaveRequest.findById(req.params.id).populate('employee').populate('leaveType').populate('approvalStatus.employee');
+      const result = await leaveTypeServices.getLeaveRequestById(req)
       res.status(200).json(result)
     }
     catch (error) {
@@ -414,48 +184,5 @@ const leaveTypeController = {
   }
 
 };
-
-const getTimeValue = (key) => {
-  var result = 0;
-  switch (key) {
-    case LeaveTimeType.AFTERNOON_SHIFT:
-      result = LeaveTimeValue.AFTERNOON_SHIFT
-      break;
-    case LeaveTimeType.MORNING_SHIFT:
-      result = LeaveTimeValue.MORNING_SHIFT
-      break;
-    case LeaveTimeType.HALF_DAY:
-      result = LeaveTimeValue.HALF_DAY
-      break;
-    default:
-      result = LeaveTimeValue.ALL_DAY
-      break;
-  }
-  return result;
-};
-
-const getAprrovalById = async (employeeId) => {
-  const employee = await Employee.findById(employeeId)
-  var approvalId = [];
-  var team;
-  var department;
-  if (employee.role !== EmployeeRole.LEADER) team = await Team.findById(employee.team)
-  if (employee.role !== EmployeeRole.MANAGER) department = await Department.findById(employee.department)
-
-  const human_resource = await Employee.findOne({ role: EmployeeRole.HUMAN_RESOURCE })
-
-  if (team?.leader) approvalId.push(team.leader)
-  if (department?.manager) approvalId.push(department.manager)
-  approvalId.push(human_resource?._id)
-
-
-  return approvalId.map(item => {
-    return {
-      employee: item,
-      status: StatusRequest.WAITING,
-    }
-  })
-
-}
 
 module.exports = leaveTypeController;

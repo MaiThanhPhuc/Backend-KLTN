@@ -1,38 +1,9 @@
-const { Employee, EmployeeSalary } = require("../models/employee")
-const generator = require('generate-password');
-const { EmployeeLeaveType, LeaveRequest } = require("../models/leaveType");
-const { Team, Department } = require("../models/companyModels");
-const { WorkLog } = require("../models/workLog");
-const nodemailer = require('nodemailer');
-
-const Status = {
-  ACTIVE: 1,
-  DEACTIVE: 0
-}
-
-const EmployeeRole = {
-  ADMIN: 0,
-  HUMAN_RESOURCE: 1,
-  MANAGER: 2,
-  LEADER: 3,
-  MEMBER: 4,
-}
+const employeeServices = require("../services/employeeServices");
 
 const employeeController = {
   addEmployee: async (req, res) => {
     try {
-      const newEmployee = new Employee(req.body);
-      let uniqueEmail = await Employee.findOne({ email: newEmployee.email });
-      if (uniqueEmail) return res.status(400).send("User already registered.");
-      const savedEmployee = await newEmployee.save()
-      if (savedEmployee) {
-        if (savedEmployee.role == EmployeeRole.LEADER) {
-          await Team.findByIdAndUpdate(savedEmployee.team, { leader: savedEmployee._id })
-        }
-        if (savedEmployee.role == EmployeeRole.MANAGER) {
-          await Department.findByIdAndUpdate(savedEmployee.department, { manager: savedEmployee._id })
-        }
-      }
+      const savedEmployee = await employeeServices.addEmployee(req)
       res.status(200).json(savedEmployee)
     } catch (error) {
       res.status(500).json(error);
@@ -41,16 +12,15 @@ const employeeController = {
 
   saveImportEmployee: async (req, res) => {
     try {
-      const savedEmployee = await Employee.insertMany(req.body);
+      const savedEmployee = await employeeServices.saveImportEmployee(req.body);
       res.status(200).json(savedEmployee)
     } catch (error) {
       res.status(500).json(error)
-
     }
   },
   getAllEmployee: async (req, res) => {
     try {
-      const employees = await Employee.find();
+      const employees = await employeeServices.getAllEmployee()
       res.status(200).json(employees)
     } catch (error) {
       res.status(500).json(error)
@@ -59,9 +29,7 @@ const employeeController = {
 
   getEmployeeById: async (req, res) => {
     try {
-      const employee = await Employee.findById(req.params.id).populate("team").populate("department").populate("office");
-      const empLeaveType = await EmployeeLeaveType.find({ employee: req.params.id }).populate("leaveType");
-      const reponse = { employeeInfo: employee, leaveType: empLeaveType }
+      const reponse = await employeeServices.getEmployeeById(req)
       res.status(200).json(reponse)
     }
     catch (error) {
@@ -70,11 +38,9 @@ const employeeController = {
     }
   },
 
-  getEmployeeSalaryById: async (req, res) => {
+  getEmployeeSalary: async (req, res) => {
     try {
-      const employee = await Employee.findById(req.params.id).populate("team").populate("department").populate("office");
-      const employeeSalary = await EmployeeSalary.findOne({ employee: req.params.id, month: new Date().getMonth() + 1, year: new Date().getFullYear() });
-      const reponse = { employeeInfo: employee, employeeSalary: employeeSalary }
+      const reponse = await employeeServices.getEmployeeSalary(req)
       res.status(200).json(reponse)
     }
     catch (error) {
@@ -84,16 +50,7 @@ const employeeController = {
 
   updateEmployeeById: async (req, res) => {
     try {
-      await Employee.findByIdAndUpdate(req.params.id, { $set: req.body })
-      const employee = await Employee.findById(req.params.id);
-      if (employee) {
-        if (employee.role == EmployeeRole.LEADER) {
-          await Team.findByIdAndUpdate(employee.team, { leader: employee._id })
-        }
-        if (employee.role == EmployeeRole.MANAGER) {
-          await Department.findByIdAndUpdate(employee.department, { manager: employee._id })
-        }
-      }
+      await employeeServices.updateEmployeeById(req)
       res.status(200).json(true)
     }
     catch (error) {
@@ -104,9 +61,7 @@ const employeeController = {
 
   deleteEmployeeById: async (req, res) => {
     try {
-      const employee = await Employee.findByIdAndDelete(req.params.id);
-
-      await employee.updateOne({ $set: req.body })
+      await employeeServices.deleteEmployeeById(req)
       res.status(200).json("Success")
     }
     catch (error) {
@@ -117,44 +72,8 @@ const employeeController = {
 
   searchEmployee: async (req, res) => {
     try {
-      const {
-        limit = 5,
-        orderBy = 'code',
-        sortBy = 'asc',
-        keyword
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const role = req.query?.role;
-      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
-      // const officeId = req.query.officeId || "";
-      // const departmentId = req.query.departmentId || "";
-      // const teamId = req.query.teamId || "";
-
-      const skip = (pageIndex - 1) * limit;
-
-      const queries = {
-        status: status,
-        isAdmin: false || undefined
-      }
-
-      if (keyword) queries.fullName = { $regex: keyword, $options: 'i' }
-      if (role) {
-        const temp = role.length > 1 ? role.map(item => parseInt(item)) : [parseInt(role)]
-        queries.role = { $in: temp }
-      }
-      const result = await Employee.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
-        .populate("team").populate("department").populate("office");
-      const totalItems = await Employee.countDocuments(queries)
-
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+      const result = await employeeServices.searchEmployee(req)
+      res.status(200).json(result)
     }
     catch (error) {
       res.status(500).json(error)
@@ -163,72 +82,8 @@ const employeeController = {
   },
   getAbsentByDate: async (req, res) => {
     try {
-      const {
-        limit = 5,
-        orderBy = 'updateDate',
-        sortBy = 'asc',
-        currentDate,
-        dateFrom,
-        dateTo
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const skip = (pageIndex - 1) * limit;
-
-      var start = new Date();
-      var end = new Date(start);
-
-      if (currentDate) {
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-      }
-      if (dateFrom) {
-        var start1 = new Date(dateFrom);
-        start.setDate(start1.getUTCDate());
-        start = new Date(start1.setHours(0, 0, 0, 0)).toISOString()
-      }
-      if (dateTo) {
-        var end1 = new Date(dateTo);
-        end.setDate(end1.getUTCDate());
-        end = new Date(end1.setHours(23, 59, 59, 999)).toISOString()
-      }
-
-      const queries = {
-        date: {
-          $gte: start,
-          $lte: end,
-        }
-      }
-
-      const result = await LeaveRequest.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
-        .populate(
-          {
-            path: 'employee',
-            populate: [
-              {
-                path: 'department',
-                model: 'Department'
-              },
-              {
-                path: 'team',
-                model: 'Team'
-              },
-              {
-                path: 'office',
-                model: 'Office'
-              }
-            ]
-          },
-        );
-      const totalItems = await LeaveRequest.countDocuments(queries)
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+      const result = await employeeServices.getAbsentByDate(req)
+      res.status(200).json(result)
     }
     catch (error) {
       res.status(500).json(error)
@@ -236,7 +91,7 @@ const employeeController = {
   },
   resetPassword: async (req, res) => {
     try {
-      await Employee.findByIdAndUpdate(req.params.id, { password: generatePassword() })
+      await employeeServices.resetPassword(req)
       res.status(200).json("Success")
     } catch (error) {
       res.status(500).json(error)
@@ -245,117 +100,22 @@ const employeeController = {
 
   calcSalaryEmployeeByMonth: async (req, res) => {
     try {
+      const result = await employeeServices.calcSalaryEmployeeByMonth(req)
+      res.status(200).json(result)
+    } catch (error) {
+      res.status(500).json(error)
+    }
+  },
 
-      const employeeSalary = new EmployeeSalary(req.body);
-      const workingDay = await getWorkingTimeByEmployee(employeeSalary.employee, employeeSalary.month);
-      let salary = await calcSalaryByMonth(employeeSalary.contractSalary, employeeSalary.paidDay, workingDay.otTime);
-      salary += parseFloat(employeeSalary.transportAllowance) + parseFloat(employeeSalary.mealAllowance);
-
-      await EmployeeSalary.findByIdAndUpdate(employeeSalary.id,
-        {
-          status: 1,
-          paidSalary: salary,
-          workingDay: workingDay.workingTime / 8,
-          updateDate: new Date(),
-          transportAllowance: employeeSalary.transportAllowance,
-          mealAllowance: employeeSalary.mealAllowance,
-          paidDay: employeeSalary.paidDay
-        })
-
-      res.status(200).json({
-        msg: "Success",
-        result: {
-          paidSalary: salary,
-          workingDay: workingDay.workingTime,
-        },
-      })
+  sendEmailPayslip: async (req, res) => {
+    try {
+      const result = await employeeServices.sendEmailPayslip(req)
+      res.status(200).json(result)
     } catch (error) {
       res.status(500).json(error)
     }
   }
 
 }
-const generatePassword = (password) => {
-  password = generator.generate({
-    length: 10,
-    uppercase: true,
-    lowercase: true,
-    numbers: true,
-  });
-  return password
-}
-
-const getWorkingTimeByEmployee = async (employeeId, month) => {
-  // const month = new Date().getMonth() + 1;
-  const year = new Date().getFullYear(); // Change this to the desired year
-
-  const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-  const endOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0));
-
-  endOfMonth.setMilliseconds(endOfMonth.getMilliseconds() - 1);
-
-  const result = await WorkLog.find(
-    {
-      "employee": employeeId,
-      date: {
-        $gte: startOfMonth,
-        $lt: endOfMonth
-      }
-    }
-  );
-
-  var workingTime = 0;
-  var otTime = 0;
-  if (result) {
-    workingTime = result.filter(x => x.status == 1).reduce((a, b) => a + b.time, 0);
-    otTime = result.filter(x => x.status == 1).reduce((a, b) => a + (b.otTime * b.otRate), 0);
-  }
-
-  return { workingTime, otTime };
-}
-
-const calcSalaryByMonth = async (baseSalary, workingDate, overTime) => {
-  let salary = 0;
-  const workingDayOfMonth = countWorkingDayByMonth();
-  const unitSalary = baseSalary / workingDayOfMonth;
-  salary = unitSalary * workingDate;
-
-  if (overTime) {
-    const OTSalary = overTime * unitSalary;
-    salary += OTSalary;
-  }
-
-  return salary;
-}
-
-const countWorkingDayByMonth = () => {
-  const year = new Date().getFullYear()
-  const month = new Date().getMonth() + 1;
-  let count = 0;
-  for (let day = 1; day <= new Date(year, month, 0).getDate(); day++)
-    count += new Date(year, month - 1, day).getDay() >= 1 && new Date(year, month - 1, day).getDay() <= 5;
-  return count;
-}
-
-// eslint-disable-next-line no-unused-vars
-const sendMail = async (mailOptions) => {
-
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD
-    }
-  });
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Error:', error);
-    } else {
-      console.log('Email sent:', info.response);
-    }
-  });
-
-}
-
 
 module.exports = employeeController;

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 const { isEmail } = require('validator');
 const { Counter } = require("./counters");
-const generator = require('generate-password');
+const { generatePassword } = require("../utils/common");
 
 const employeeSchema = new mongoose.Schema({
   code: {
@@ -148,9 +148,9 @@ const employeeSalarySchema = new mongoose.Schema({
   }
 })
 
-employeeSchema.pre('save', function (next) {
+employeeSchema.pre('save', async function (next) {
   var emp = this;
-  emp.password = generatePassword(emp.password)
+  emp.password = await generatePassword(emp.password)
   emp.fullName = `${emp.firstName} ${emp.lastName}`
   Counter.findOneAndUpdate({ name: 'Employee' }, { $inc: { seq: 1 } }, { new: true, upsert: true }).then(function (count) {
     console.log("...count: " + JSON.stringify(count));
@@ -166,7 +166,7 @@ employeeSchema.pre('save', function (next) {
 
 employeeSchema.pre('insertMany', async function (next, docs) {
   for (const emp of docs) {
-    emp.password = generatePassword(emp.password)
+    emp.password = await generatePassword(emp.password)
     emp.status = Status.ACTIVE
     emp.role = EmployeeRole.MEMBER
     emp.fullName = `${emp.firstName} ${emp.lastName}`
@@ -181,16 +181,6 @@ employeeSchema.pre('insertMany', async function (next, docs) {
   }
   next();
 });
-
-const generatePassword = (password) => {
-  password = generator.generate({
-    length: 10,
-    uppercase: true,
-    lowercase: true,
-    numbers: true,
-  });
-  return password
-}
 
 const Status = {
   ACTIVE: 1,

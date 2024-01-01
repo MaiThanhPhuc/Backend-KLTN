@@ -1,17 +1,14 @@
+/* eslint-disable no-unused-vars */
 const { Employee } = require("../models/employee");
-const { Team, Department, Office } = require("../models/companyModels")
-
-const Status = {
-  ACTIVE: 1,
-  DEACTIVE: 0
-}
+const { Team, Department, Office } = require("../models/companyModels");
+const Constants = require("../models/contants");
 
 const adminServices = {
   addTeam: async (req) => {
     const today = new Date()
     const request = new Team(req.body);
     request.updateDate = today;
-    request.status = Status.ACTIVE;
+    request.status = Constants.Status.ACTIVE;
     const saveValue = await request.save();
     return saveValue
   },
@@ -21,286 +18,195 @@ const adminServices = {
   },
 
   getTeamById: async (req, res) => {
-    try {
-      const result = await Team.findById(req.params.id);
-      res.status(200).json(result)
-    }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    const result = await Team.findById(req.params.id);
+    return result
   },
 
   updateTeamById: async (req, res) => {
-    try {
-      const today = new Date()
-      req.body.updateDate = today;
-      const result = await Team.findByIdAndUpdate(req.params.id, req.body);
-      if (result.leader) {
-        await Employee.findByIdAndUpdate(result.leader, { team: result._id })
-      }
-      res.status(200).json("Success")
+    const today = new Date()
+    req.body.updateDate = today;
+    const result = await Team.findByIdAndUpdate(req.params.id, req.body);
+    if (result.leader) {
+      await Employee.findByIdAndUpdate(result.leader, { team: result._id })
     }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    return
   },
 
   searchTeam: async (req, res) => {
-    try {
-      const {
-        limit = 5,
-        orderBy = 'code',
-        sortBy = 'asc',
-        keyword
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
-      const skip = (pageIndex - 1) * limit;
+    const {
+      limit = 5,
+      orderBy = 'code',
+      sortBy = 'asc',
+      keyword
+    } = req.query
+    const pageIndex = parseInt(req.query.pageIndex) || 1;
+    const status = parseInt(req.query.status) == 0 ? Constants.Status.DEACTIVE : Constants.Status.ACTIVE;
+    const skip = (pageIndex - 1) * limit;
 
-      const queries = {
-        status: status
-      }
-
-      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
-
-      const result = await Team.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("leader")
-        .populate("department");
-      const totalItems = await Team.countDocuments(queries)
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+    const queries = {
+      status: status
     }
-    catch (error) {
-      res.status(500).json(error)
 
+    if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+
+    const result = await Team.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy }).populate("leader")
+      .populate("department");
+    const totalItems = await Team.countDocuments(queries)
+
+    return {
+      msg: "Success",
+      result,
+      totalItems,
+      toltalPage: Math.ceil(totalItems / limit),
+      limit: +limit,
+      currentPage: pageIndex
     }
   },
 
   deleteTeamById: async (req, res) => {
-    try {
-      const today = new Date()
-      req.body.updateDate = today;
-      const result = await Team.findByIdAndDelete(req.params.id);
+    const today = new Date()
+    req.body.updateDate = today;
+    const result = await Team.findByIdAndDelete(req.params.id);
 
-      await result.updateOne({ $set: req.body })
-      res.status(200).json("Success")
-    }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    await result.updateOne({ $set: req.body })
+    return
   },
   /// Office
   addOffice: async (req, res) => {
-    try {
-      const today = new Date()
-      const request = new Office(req.body);
-      request.updateDate = today;
-      request.status = Status.ACTIVE;
-      let checkValid = await Office.findOne({ name: request.name });
-      if (checkValid) return res.status(400).send("Name already registered.");
-      const saveValue = await request.save();
-      res.status(200).json(saveValue.id)
-    } catch (error) {
-      res.status(500).json(error);
-    }
+    const today = new Date()
+    const request = new Office(req.body);
+    request.updateDate = today;
+    request.status = Constants.Status.ACTIVE;
+    const saveValue = await request.save();
+    return (saveValue.id)
   },
 
   getAllOffice: async (req, res) => {
-    try {
-      const data = await Office.find();
-      res.status(200).json(data)
-    } catch (error) {
-      res.status(500).json(error)
-    }
+    const data = await Office.find();
+    return (data)
   },
 
   searchOffice: async (req, res) => {
-    try {
-      const {
-        limit = 5,
-        orderBy = 'code',
-        sortBy = 'asc',
-        keyword
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
-      const skip = (pageIndex - 1) * limit;
+    const {
+      limit = 5,
+      orderBy = 'code',
+      sortBy = 'asc',
+      keyword
+    } = req.query
+    const pageIndex = parseInt(req.query.pageIndex) || 1;
+    const status = parseInt(req.query.status) == 0 ? Constants.Status.DEACTIVE : Constants.Status.ACTIVE;
+    const skip = (pageIndex - 1) * limit;
 
-      const queries = {
-        status: status
-      }
-
-      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
-
-      const result = await Office.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy });
-      const totalItems = await Office.countDocuments(queries)
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+    const queries = {
+      status: status
     }
-    catch (error) {
-      res.status(500).json(error)
 
-    }
+    if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+
+    const result = await Office.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy });
+    const totalItems = await Office.countDocuments(queries)
+
+    return ({
+      msg: "Success",
+      result,
+      totalItems,
+      toltalPage: Math.ceil(totalItems / limit),
+      limit: +limit,
+      currentPage: pageIndex
+    })
   },
 
   getOfficeById: async (req, res) => {
-    try {
-      const result = await Office.findById(req.params.id);
-      res.status(200).json(result)
-    }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    const result = await Office.findById(req.params.id);
+    return (result)
   },
 
   updateOfficeById: async (req, res) => {
-    try {
-      const today = new Date()
-      req.body.updateDate = today;
-      await Office.findByIdAndUpdate(req.params.id, req.body);
-      res.status(200).json("Success")
-    }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    const today = new Date()
+    req.body.updateDate = today;
+    await Office.findByIdAndUpdate(req.params.id, req.body);
+    return
   },
 
   deleteOfficeById: async (req, res) => {
-    try {
-      const today = new Date()
-      const result = await Office.findByIdAndDelete(req.params.id);
-      req.body.updateDate = today;
-      await result.updateOne({ $set: req.body })
-      res.status(200).json("Success")
-    }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    const today = new Date()
+    const result = await Office.findByIdAndDelete(req.params.id);
+    req.body.updateDate = today;
+    await result.updateOne({ $set: req.body })
+    return
   },
 
   /// Department
   addDepartment: async (req, res) => {
-    try {
-      const today = new Date()
-      const request = new Department(req.body);
-      let checkValid = await Department.findOne({ name: request.name });
-      if (checkValid) return res.status(400).send("Name already registered.");
-      request.updateDate = today
-      request.status = Status.ACTIVE;
-      const saveValue = await request.save();
-      res.status(200).json(saveValue)
-    } catch (error) {
-      res.status(500).json(error);
-    }
+    const today = new Date()
+    const request = new Department(req.body);
+
+    request.updateDate = today
+    request.status = Constants.Status.ACTIVE;
+    const saveValue = await request.save();
+    return (saveValue)
   },
 
   searchDepartment: async (req, res) => {
-    try {
-      const {
-        limit = 5,
-        orderBy = 'code',
-        sortBy = 'asc',
-        keyword
-      } = req.query
-      const pageIndex = parseInt(req.query.pageIndex) || 1;
-      const status = parseInt(req.query.status) == 0 ? Status.DEACTIVE : Status.ACTIVE;
-      const skip = (pageIndex - 1) * limit;
+    const {
+      limit = 5,
+      orderBy = 'code',
+      sortBy = 'asc',
+      keyword
+    } = req.query
+    const pageIndex = parseInt(req.query.pageIndex) || 1;
+    const status = parseInt(req.query.status) == 0 ? Constants.Status.DEACTIVE : Constants.Status.ACTIVE;
+    const skip = (pageIndex - 1) * limit;
 
-      const queries = {
-        status: status
-      }
-
-      if (keyword) queries.name = { $regex: keyword, $options: 'i' }
-
-      const result = await Department.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
-        .populate("office").populate("manager");
-      const totalItems = await Department.countDocuments(queries)
-
-      res.status(200).json({
-        msg: "Success",
-        result,
-        totalItems,
-        toltalPage: Math.ceil(totalItems / limit),
-        limit: +limit,
-        currentPage: pageIndex
-      })
+    const queries = {
+      status: status
     }
-    catch (error) {
-      res.status(500).json(error)
 
-    }
+    if (keyword) queries.name = { $regex: keyword, $options: 'i' }
+
+    const result = await Department.find(queries).skip(skip).limit(limit).sort({ [orderBy]: sortBy })
+      .populate("office").populate("manager");
+    const totalItems = await Department.countDocuments(queries)
+
+    return ({
+      msg: "Success",
+      result,
+      totalItems,
+      toltalPage: Math.ceil(totalItems / limit),
+      limit: +limit,
+      currentPage: pageIndex
+    })
   },
 
   getAllDepartment: async (req, res) => {
-    try {
-      const data = await Department.find().populate("office").populate("manager");
-      res.status(200).json(data)
-    } catch (error) {
-      res.status(500).json(error)
-    }
+    const data = await Department.find().populate("office").populate("manager");
+    return (data)
   },
 
   getDepartmentById: async (req, res) => {
-    try {
-      const result = await Department.findById(req.params.id);
-      const team = await Team.find({ department: req.params.id });
-      result.team = team;
-      res.status(200).json(result)
-    }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    const result = await Department.findById(req.params.id);
+    const team = await Team.find({ department: req.params.id });
+    result.team = team;
+    return (result)
   },
 
   updateDepartmentById: async (req, res) => {
-    try {
-      const today = new Date()
-      req.body.updateDate = today;
-      const result = await Department.findByIdAndUpdate(req.params.id, req.body);
-      if (result.manager) {
-        await Employee.findByIdAndUpdate(result.manager, { manager: result._id })
-      }
-      res.status(200).json("Success")
+    const today = new Date()
+    req.body.updateDate = today;
+    const result = await Department.findByIdAndUpdate(req.params.id, req.body);
+    if (result.manager) {
+      await Employee.findByIdAndUpdate(result.manager, { manager: result._id })
     }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    return
   },
 
   deleteDepartmentById: async (req, res) => {
-    try {
-      const today = new Date()
-      req.body.updateDate = today;
-      const result = await Department.findByIdAndDelete(req.params.id);
+    const today = new Date()
+    req.body.updateDate = today;
+    const result = await Department.findByIdAndDelete(req.params.id);
 
-      await result.updateOne({ $set: req.body })
-      res.status(200).json("Success")
-    }
-    catch (error) {
-      res.status(500).json(error)
-
-    }
+    await result.updateOne({ $set: req.body })
+    return
   }
 }
 
