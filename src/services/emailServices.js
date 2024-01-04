@@ -12,21 +12,22 @@ const createPDF = () => {
   doc.end();
 };
 
-const sendPayslipSalary = async (fileBuffer, employeeName, month, year) => {
+const sendPayslipSalary = async (fileBuffer, employee, month, year) => {
+
   const time = getMonthName(month) + ' ' + year;
 
   const htmlContent = fs.readFileSync('src/services/payslipContent.html', 'utf-8');
 
-  let content = htmlContent.replace('{{time}}', time).replace('{{name}}', employeeName).replace('{{company}}', 'UTE Corp');
+  let content = htmlContent.replace('{{time}}', time).replace('{{name}}', employee.fullName).replace('{{company}}', 'UTE Corp');
 
   const mailOptions = {
     from: process.env.EMAIL,
     to: process.env.RECEIVER_EMAIL,
-    subject: `Payslip ${employeeName} ${time}`,
+    subject: `Payslip ${employee.fullName} ${time}`,
     html: content,
     attachments: [
       {
-        filename: `${employeeName}_payslip.pdf`,
+        filename: `${employee.fullName}_payslip.pdf`,
         content: fileBuffer
       }
     ]

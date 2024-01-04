@@ -227,7 +227,7 @@ const employeeServices = {
 
   sendEmailPayslip: async (req, res) => {
     const empSalary = await EmployeeSalary.findById(req.params.id).populate("employee");
-    await sendPayslipSalary(req.file.buffer, empSalary.employee.fullName, empSalary.month, empSalary.year);
+    await sendPayslipSalary(req.file.buffer, empSalary.employee, empSalary.month, empSalary.year);
     return true
   }
 }
