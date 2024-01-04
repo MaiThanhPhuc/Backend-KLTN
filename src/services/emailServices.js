@@ -36,9 +36,11 @@ const sendPayslipSalary = async (fileBuffer, employeeName, month, year) => {
 
 const sendNotificationLeaveRequest = async (data) => {
   const content = await generateHtmlContentLeaveRequest(data, 'src/services/leaveRequest.html')
+  var mailReceives = data.approvalStatus.map(x => x?.employee?.email);
+
   const mailOptions = {
     from: process.env.EMAIL,
-    to: process.env.RECEIVER_EMAIL,
+    to: mailReceives ? mailReceives : process.env.RECEIVER_EMAIL,
     subject: `Leave request from ${data.employee.fullName}`,
     html: content,
   };

@@ -15,8 +15,8 @@ const workLogServices = {
     const existsRecord = await EmployeeSalary.findOne(
       {
         employee: req.body.employee,
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear()
+        month: req.body.month,
+        year: req.body.year
       });
     if (!existsRecord) {
       const emp = await Employee.findById(req.body.employee);
@@ -275,7 +275,7 @@ const workLogServices = {
 
 const checkValidStatus = (body) => {
   const date = new Date(body.date);
-  if (date.getDay() >= 1 && date.getDay() <= 5 && (body.time >= 0 || body.time <= 8)) { // Monday is 1 and Friday is 5
+  if (date.getDay() >= 1 && date.getDay() <= 5 && (body.time >= 0 && body.time <= 8)) { // Monday is 1 and Friday is 5
     return Constants.WorkLogStatus.VALID;
   } else {
     return Constants.WorkLogStatus.INVALID;

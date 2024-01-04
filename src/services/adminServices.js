@@ -14,7 +14,7 @@ const adminServices = {
   },
 
   getAllTeam: async () => {
-    return await Team.find().populate("department").populate("leader");
+    return await Team.find({ status: Constants.Status.ACTIVE }).populate("department").populate("leader");
   },
 
   getTeamById: async (req, res) => {
@@ -82,7 +82,7 @@ const adminServices = {
   },
 
   getAllOffice: async (req, res) => {
-    const data = await Office.find();
+    const data = await Office.find({ status: Constants.Status.ACTIVE });
     return (data)
   },
 
@@ -179,7 +179,7 @@ const adminServices = {
   },
 
   getAllDepartment: async (req, res) => {
-    const data = await Department.find().populate("office").populate("manager");
+    const data = await Department.find({ status: Constants.Status.ACTIVE }).populate("office").populate("manager");
     return (data)
   },
 

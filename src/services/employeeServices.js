@@ -57,8 +57,9 @@ const employeeServices = {
   },
 
   updateEmployeeById: async (req, res) => {
-
-    await Employee.findByIdAndUpdate(req.params.id, { $set: req.body })
+    const emp = new Employee(req)
+    emp.fullName = `${emp.firstName} ${emp.lastName}`
+    await Employee.findByIdAndUpdate(req.params.id, { $set: emp })
     const employee = await Employee.findById(req.params.id);
     if (employee) {
       if (employee.role == Constants.EmployeeRole.LEADER) {
@@ -198,7 +199,7 @@ const employeeServices = {
 
   calcSalaryEmployeeByMonth: async (req, res) => {
     const employeeSalary = new EmployeeSalary(req.body);
-    const workingTime = await getWorkingTimeByEmployee(employeeSalary.employee, employeeSalary.month);
+    const workingTime = await getWorkingTimeByEmployee(employeeSalary.employee, employeeSalary.month, employeeSalary.year);
     const leaveTime = await getLeaveTimeByEmployee(employeeSalary.employee, employeeSalary.month);
     let salary = await calcSalaryByMonth(employeeSalary, workingTime, leaveTime);
 
@@ -233,11 +234,10 @@ const employeeServices = {
 
 
 
-const getWorkingTimeByEmployee = async (employeeId, month) => {
+const getWorkingTimeByEmployee = async (employeeId, month, year) => {
   // const month = new Date().getMonth() + 1;
-  const year = new Date().getFullYear(); // Change this to the desired year
 
-  const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const startOfMonth = new Date(Date.UTC(year, month - 1, 0, 0, 0, 0));
   const endOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0));
 
   endOfMonth.setMilliseconds(endOfMonth.getMilliseconds() - 1);

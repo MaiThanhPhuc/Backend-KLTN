@@ -106,7 +106,7 @@ const leaveTypeServices = {
     })
     const taken = employeeLeave.taken + timeValue;
     await EmployeeLeaveType.findByIdAndUpdate(employeeLeave._id, { taken: taken, updateDate: today });
-    const dataLeaveRequest = await LeaveRequest.findById(result.id).populate("employee").populate("leaveType");
+    const dataLeaveRequest = await LeaveRequest.findById(result.id).populate("employee").populate("leaveType").populate('approvalStatus.employee');
     await sendNotificationLeaveRequest(dataLeaveRequest);
     return (result)
   },
