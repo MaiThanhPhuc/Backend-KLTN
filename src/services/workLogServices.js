@@ -14,7 +14,7 @@ const workLogServices = {
     const saveValue = await request.save();
     const existsRecord = await EmployeeSalary.findOne(
       {
-        employee: req.body.employee,
+        employee: new mongoose.Types.ObjectId(req.body.employee),
         month: req.body.month,
         year: req.body.year
       });
