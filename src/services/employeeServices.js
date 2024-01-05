@@ -199,24 +199,28 @@ const employeeServices = {
 
   calcSalaryEmployeeByMonth: async (req, res) => {
     const employeeSalary = new EmployeeSalary(req.body);
-    const workingTime = await getWorkingTimeByEmployee(employeeSalary.employee, employeeSalary.month, employeeSalary.year);
+    var workingTime = await getWorkingTimeByEmployee(employeeSalary.employee, employeeSalary.month, employeeSalary.year);
     const leaveTime = await getLeaveTimeByEmployee(employeeSalary.employee, employeeSalary.month);
     let salary = await calcSalaryByMonth(employeeSalary, workingTime, leaveTime);
 
     await EmployeeSalary.findByIdAndUpdate(employeeSalary.id,
       {
         status: 1,
-        paidSalary: salary,
+        paidSalary: salary.salary,
         workingDay: workingTime.time / 8,
         updateDate: new Date(),
         transportAllowance: employeeSalary.transportAllowance,
         mealAllowance: employeeSalary.mealAllowance,
-        paidDay: employeeSalary.paidDay
+        paidDay: employeeSalary.paidDay != workingTime.time / 8 ? employeeSalary.paidDay : workingTime.time / 8,
+        taxValue: salary.taxValue,
+        taxIncomeRate: salary.taxRate
       })
 
     return ({
       msg: "Success",
       result: {
+        leavePaidDay: leaveTime.paidTime / 8,
+        leaveUnpaidDay: leaveTime.unPaidTime / 8,
         paidSalary: salary,
         workingDay: workingTime.time,
       },
@@ -296,7 +300,7 @@ const getLeaveTimeByEmployee = async (employeeId, month) => {
 const calcSalaryByMonth = async (employeeSalary, workingTime, leaveTime) => {
   let salary = 0;
   const workingDayOfMonth = countWorkingDayByMonth();
-
+  const bhxh = 0.105;
   const unitSalary = employeeSalary.contractSalary / (workingDayOfMonth * 8);
 
   salary = unitSalary * (workingTime.time + leaveTime.paidTime - leaveTime.unPaidTime);
@@ -304,10 +308,13 @@ const calcSalaryByMonth = async (employeeSalary, workingTime, leaveTime) => {
     const OTSalary = workingTime?.overTime * unitSalary;
     salary += OTSalary;
   }
+  const taxRate = getTaxRate(salary);
 
   salary += parseFloat(employeeSalary?.transportAllowance) + parseFloat(employeeSalary?.mealAllowance);
 
-  return parseFloat(salary).toFixed(0);
+  const taxValue = (salary * bhxh) + (salary * taxRate);
+
+  return { salary: parseFloat(salary).toFixed(0), taxValue: parseFloat(taxValue).toFixed(0), taxRate: taxRate };
 }
 
 const countWorkingDayByMonth = () => {
@@ -317,6 +324,24 @@ const countWorkingDayByMonth = () => {
   for (let day = 1; day <= new Date(year, month, 0).getDate(); day++)
     count += new Date(year, month - 1, day).getDay() >= 1 && new Date(year, month - 1, day).getDay() <= 5;
   return count;
+}
+
+const getTaxRate = (salary) => {
+  var result = 0.0;
+  if (salary >= 0 && salary <= 5000)
+    return result = 0.05;
+  else if (salary > 5000 && salary <= 10000)
+    return result = 0.1;
+  else if (salary > 10000 && salary <= 18000)
+    return result = 0.15;
+  else if (salary > 18000 && salary <= 32000)
+    return result = 0.2;
+  else if (salary > 32000 && salary <= 52000)
+    return result = 0.25;
+  else if (salary > 52000 && salary <= 80000)
+    return result = 0.3;
+  else if (salary > 80000)
+    return result = 0.35;
 }
 
 

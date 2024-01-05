@@ -154,7 +154,7 @@ const leaveTypeServices = {
     const skip = (pageIndex - 1) * limit;
 
     const desiredMonth = req.query.month; // Change this to the desired month
-    const year = new Date().getFullYear(); // Change this to the desired year
+    const year = req.query.year; // Change this to the desired year
 
     const startOfMonth = new Date(Date.UTC(year, desiredMonth - 1, 0, 0, 0, 0));
     const endOfMonth = new Date(Date.UTC(year, desiredMonth, 1, 0, 0, 0));
