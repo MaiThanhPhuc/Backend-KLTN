@@ -57,9 +57,8 @@ const employeeServices = {
   },
 
   updateEmployeeById: async (req, res) => {
-    const emp = new Employee(req)
-    emp.fullName = `${emp.firstName} ${emp.lastName}`
-    await Employee.findByIdAndUpdate(req.params.id, { $set: emp })
+    const emp = new Employee(req.body)
+    await Employee.findByIdAndUpdate(req.params.id, { $set: req.body, fullName: `${emp.firstName} ${emp.lastName}` })
     const employee = await Employee.findById(req.params.id);
     if (employee) {
       if (employee.role == Constants.EmployeeRole.LEADER) {
